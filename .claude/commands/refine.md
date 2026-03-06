@@ -84,6 +84,11 @@ Starting refine session...
 Read all files in `<domain-root>/distilled/` so the subagent has current state to reason
 against during processing. Also read `<domain-root>/config/types.yaml` for type descriptions.
 
+Additionally, attempt to read `<domain-root>/config/identity.md`. If it exists, include its
+full content as domain identity context for the subagent. If it does not exist, proceed
+without it — no error. The subagent uses the identity (pitch and scope lists) to make
+scope-aware archival decisions for seeded items.
+
 ---
 
 ## Step 7 — Invoke the refine subagent
@@ -155,9 +160,16 @@ Perform these silently when confidence is high (no human needed):
 | `classify_and_route` | Item type is `other` but can be confidently reclassified from context and examples |
 | `split` | Item clearly contains multiple separable knowledge types — split into sub-items, each routed separately |
 | `archive_only` | Item is a duplicate that adds nothing new; archive without updating distilled files |
+| `out_of_scope` | Item's content clearly aligns with a term on the "Out of scope" list in `config/identity.md` with high confidence — archive without a governed decision |
 
 For `split` actions: produce one autonomous action per sub-item with their respective
 target_files and content; mark the source item as archived.
+
+For `out_of_scope` actions: the `description` field MUST include the matched out-of-scope term
+from `config/identity.md`. Set `target_file` to null (item is archived, not routed to any
+distilled file). The host will record this in the changelog with the matched term and outcome.
+Only use `out_of_scope` when confidence is high — if there is any doubt about whether the item
+truly falls outside the domain scope, use a `seed_relevance_uncertain` governed decision instead.
 
 Do NOT perform autonomous actions for:
 - Items with normative content (responsibilities, requirements, constraints)
@@ -177,6 +189,18 @@ These MUST become governed decisions.
 | `entry_deprecation` | New information would invalidate or supersede an existing distilled entry |
 | `inaccessible_document` | Body references a document path/URL that cannot be read |
 | `unclassifiable_other` | Item type is `other` and cannot be confidently reclassified |
+| `seed_relevance_uncertain` | Item has `seed-note: Relevance uncertain` in frontmatter — relevance to this domain requires human confirmation |
+
+For `seed_relevance_uncertain` decisions: the options MUST include both the standard type-routing
+options (as normal) AND an explicit archive option:
+
+```
+{"label": "A", "description": "Archive — not relevant to this domain", "content": null}
+```
+
+Place the archive option first (label A). Renumber other options starting from B. The summary
+must explain that the item was flagged during seeding as potentially outside the domain scope,
+and include the segment content so the human can make an informed decision.
 
 Every governed decision MUST include option Z: "Flag as unresolved (create open ADR)".
 

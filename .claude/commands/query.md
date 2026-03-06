@@ -42,6 +42,18 @@ If no question is provided, output: `Error: Provide a question.` and stop.
 
 ---
 
+## Step 2.5 — Load domain identity (optional)
+
+Attempt to read `<domain-root>/config/identity.md`.
+
+- **If it exists**: parse the `domain` frontmatter field and the `**One-line**` body field.
+  Store as `domain_framing = "<domain> — <one-line text>"`.
+- **If it does not exist**: set `domain_framing = null`. Continue silently — no warning, no error.
+
+This value is used in Step 9 to prefix the response header.
+
+---
+
 ## Step 3 — Classify the query (FR-016)
 
 Unless `--mode` was provided, classify the query by:
@@ -159,7 +171,18 @@ Record sufficiency level and identify specific gaps if partial or insufficient.
 
 ### Header
 
-Always output the classification header first:
+Always output the classification header first.
+
+If `domain_framing` is non-null (identity loaded in Step 2.5), prepend the framing line:
+
+```
+Domain: <domain_framing>
+
+Query mode: <mode>
+Candidates: <file1>, <file2>, ...
+```
+
+If `domain_framing` is null (no identity file), omit the framing line entirely:
 
 ```
 Query mode: <mode>
