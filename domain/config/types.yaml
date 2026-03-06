@@ -1,0 +1,55 @@
+# Domain Brain — Type Registry
+# Each type definition controls how /capture classifies items and how /refine routes them.
+# Fields:
+#   name:        The type identifier used in raw item YAML frontmatter.
+#   description: Shown alongside the type name during capture and refinement.
+#   routes_to:   Relative path from domain root to the target distilled file.
+#   example:     One illustrative sentence used by the refine agent for classification inference.
+#
+# Hot-reload: Changes here take effect at the next /capture or /refine invocation.
+
+types:
+  - name: responsibility
+    description: "Asserts which team, person, or service owns a domain area or capability."
+    routes_to: distilled/domain.md
+    example: "Payments owns checkout error handling end-to-end."
+
+  - name: interface
+    description: "Describes an API contract, event schema, or integration point between services."
+    routes_to: distilled/interfaces.md
+    example: "The checkout callback emits a payment.completed event with orderId and amount."
+
+  - name: codebase
+    description: "Describes a repository, service, or technical component and its ownership."
+    routes_to: distilled/codebases.md
+    example: "payments-api is owned by the Payments team, built in Node.js, deployed on AWS."
+
+  - name: requirement
+    description: "Captures a constraint, non-negotiable, or quality attribute the system must satisfy."
+    routes_to: distilled/requirements.md
+    example: "Checkout must complete in under 2 seconds at P99 under peak load."
+
+  - name: stakeholder
+    description: "Describes a person, team, or external party and their relationship to the domain."
+    routes_to: distilled/stakeholders.md
+    example: "Alice is the tech lead for the Payments team, responsible for architectural decisions."
+
+  - name: decision
+    description: "Records an architectural decision, its options, and its rationale (ADR)."
+    routes_to: distilled/decisions.md
+    example: "We chose Kafka over RabbitMQ for async events due to throughput requirements."
+
+  - name: task
+    description: "An actionable work item linked to a domain requirement or gap."
+    routes_to: distilled/backlog.md
+    example: "Add retry logic to the payment callback handler (linked to REQ-007)."
+
+  - name: mom
+    description: "Minutes of meeting — captures decisions, action items, and context from a discussion."
+    routes_to: distilled/changelog.md
+    example: "Architecture call 2026-03-04: agreed that Payments owns checkout error handling."
+
+  - name: other
+    description: "Unclassified item. The refine agent will attempt to classify it during refinement."
+    routes_to: null
+    example: "The checkout flow behaves differently on mobile browsers."

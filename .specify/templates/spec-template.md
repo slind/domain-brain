@@ -95,6 +95,13 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Technical Constraints *(include if constitution principles constrain delivery)*
+
+- **Delivery mechanism**: [e.g., Claude command/skill/subagent — not a standalone app]
+- **Command surface**: [List commands and skills exposed, e.g., `/capture`, `/refine`]
+- **Storage format**: [e.g., Markdown with YAML frontmatter in version-controlled repo]
+- **Host AI**: [e.g., Claude v1; multi-assistant support deferred]
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
