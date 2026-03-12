@@ -1,33 +1,27 @@
 ---
-# Auto-populated by /frame — do not edit these fields manually if you use the command.
-# domain:   set from the domain brain root directory name
-# created:  set on first /frame run; not updated on re-runs
-# steward:  set from git config user.name
-domain:
-created:
-steward:
+domain: domain
+created: 2026-03-06
+steward: Søren Lindstrøm
 ---
 
-<!--
-  This file is created and maintained by the /frame command.
-  You may edit it directly — changes take effect at the next /seed or /refine invocation.
+# Domain Brain
 
-  Required sections:
+**One-line**: An AI extension that turns implicit domain knowledge into a queryable, governed knowledge base.
 
-  # <Domain Name> Domain
+**Pitch**: Domain Brain is a software product enabling your favorite AI to assist in collecting, culling and reasoning about a specific domain. It captures domain knowledge wherever it is observed. It organizes and distills the captured information through a governed quality gate. And uses the distilled information to serve grounded, relevant context to the AI in order to answer questions and reason about the domain in a qualified manner.
 
-  **One-line**: <≤15 words stating what this domain owns>
+**In scope**:
+- Command design and behavior (/frame, /seed, /capture, /refine, /query)
+- Knowledge workflow patterns (capture → raw → refine → distilled)
+- Type system (types.yaml, type routing, governed decisions)
+- Data models (Raw Item, Domain Identity, Seeded Raw Item, Seed Session)
+- User stories, functional requirements, and acceptance criteria from feature specs
+- Architectural decisions and design rationale from research documents
+- Interface contracts for all commands
+- Constitution and design principles
 
-  **Pitch**: <3–5 sentences describing the domain's purpose, what it owns end-to-end,
-  and what makes it distinct from neighbouring domains>
-
-  **In scope**:
-  - <capability or area this domain definitively owns>
-  - <add at least one item>
-
-  **Out of scope**:
-  - <area explicitly NOT owned by this domain, with the owning domain noted if known>
-  - <add at least one item — required for /seed relevance filtering>
-
-  Run /frame to create or update this file interactively.
--->
+**Out of scope**:
+- Individual team domain content (example Payments data is illustrative, not owned here)
+- Enterprise API integrations (Confluence REST, Notion API — future feature)
+- Deployment infrastructure and hosting
+- Claude model internals or training
