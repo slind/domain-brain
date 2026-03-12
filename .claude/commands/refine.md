@@ -91,12 +91,93 @@ scope-aware archival decisions for seeded items.
 
 ---
 
-## Step 7 — Invoke the refine subagent
+## Step 6.5 — Pre-filter batch
 
-Use the Agent tool to invoke the refine subagent (subagent_type=general) with the following
-instructions. Pass the full batch of raw items and the full distilled context as input.
+Before invoking any subagent, use the context already loaded in Step 6 to eliminate items
+that do not require subagent reasoning.
 
-The subagent MUST return a structured refine plan (not take any file actions directly).
+Maintain a `pre_filter_results` list (in memory) for the changelog.
+
+### 6.5a — Exact-duplicate detection
+
+For each raw item in the batch, normalise its body text (strip leading/trailing whitespace
+per line; collapse runs of blank lines to a single blank line). Compare the normalised body
+against the content of all loaded distilled files.
+
+If the normalised body appears verbatim in any distilled file:
+- Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
+- Record `{ item_id, filter_reason: "duplicate", matched_file: <distilled file path> }` in
+  `pre_filter_results`.
+- Remove the item from the active batch.
+
+### 6.5b — Out-of-scope pre-filter
+
+For each remaining item, evaluate its title and body against the Out-of-scope list from
+`config/identity.md` (loaded in Step 6). Use **high-confidence semantic judgment** — the
+same confidence bar required for the subagent's `out_of_scope` autonomous action: only
+classify an item as out-of-scope when there is no reasonable doubt.
+
+If the item clearly matches a term on the Out-of-scope list:
+- Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
+- Record `{ item_id, filter_reason: "out_of_scope", matched_term: <matched term> }` in
+  `pre_filter_results`.
+- Remove the item from the active batch.
+
+Items that are ambiguous or only partially matching MUST NOT be pre-filtered — pass them to
+the subagent.
+
+If the Out-of-scope list is empty or `config/identity.md` was not found, skip step 6.5b.
+
+### Empty batch after pre-filtering
+
+If the active batch is empty after both checks:
+1. All items have already had their status set to `refined` (done above).
+2. Skip Steps 7–10.
+3. Proceed directly to Step 11 with the note: "All items were eliminated by host
+   pre-filtering. No subagent invoked."
+
+---
+
+## Step 7 — Route batch to specialist subagents
+
+Group the active batch by type cluster and invoke a focused subagent for each non-empty
+cluster. Each specialist receives only the distilled context relevant to its types.
+
+### Type-cluster routing
+
+Assign each item to a cluster using this table:
+
+| Item type | Cluster | Context files to load |
+|-----------|---------|----------------------|
+| `requirement` | requirements | requirements.md, decisions.md, identity.md |
+| `interface` | interfaces | interfaces.md, decisions.md, identity.md |
+| `decision` | decisions | decisions.md, identity.md |
+| `responsibility`, `codebase`, `stakeholder`, `task`, `mom`, `other`, unrecognised | generalist | all distilled files, identity.md |
+
+For each non-empty cluster, load only the designated context files from
+`<domain-root>/distilled/` (plus `config/identity.md` as always). The generalist cluster's
+context is identical to the current full-load behaviour.
+
+### Specialist invocation
+
+For each non-empty cluster, invoke the refine subagent using the Agent tool
+(subagent_type=general) with:
+- The cluster's items (title, type, body, id)
+- Only the cluster's designated context files
+- The full SUBAGENT INSTRUCTIONS — REFINE AGENT block below
+
+Multiple clusters may be invoked concurrently.
+
+Each subagent MUST return a structured refine plan (AUTONOMOUS_ACTIONS + GOVERNED_DECISIONS).
+It MUST NOT write any files directly.
+
+### Merge plans
+
+After all specialist invocations complete, concatenate:
+- All AUTONOMOUS_ACTIONS lists from every specialist plan into one merged list
+- All GOVERNED_DECISIONS lists from every specialist plan into one merged list
+
+The merged lists are consumed by Step 8 as if returned by a single subagent.
 
 ---
 
@@ -253,9 +334,10 @@ If the batch is large (>10 items), prioritize items with types that are clearly 
 
 ---
 
-## Step 8 — Parse the refine plan
+## Step 8 — Parse the merged refine plan
 
-Parse the AUTONOMOUS_ACTIONS and GOVERNED_DECISIONS lists returned by the subagent.
+Parse the merged AUTONOMOUS_ACTIONS and GOVERNED_DECISIONS lists assembled from all
+specialist plans in Step 7.
 
 ---
 
@@ -340,6 +422,11 @@ Read `<domain-root>/distilled/changelog.md`. Append the following session entry 
 ```markdown
 ## <YYYY-MM-DD> — Refine Session
 
+### Pre-filtered (host)
+- [duplicate]: <item_id> → exact match in <matched_file>
+- [out_of_scope]: <item_id> → matched term "<matched_term>"
+...
+
 ### Autonomous actions
 - [<action_type>]: <item_id> → <description>
 - [<action_type>]: <item_id> → <description>
@@ -352,6 +439,8 @@ Read `<domain-root>/distilled/changelog.md`. Append the following session entry 
 
 ---
 ```
+
+If there were no pre-filtered items, omit the `### Pre-filtered (host)` subsection entirely.
 
 If there were no autonomous actions or no governed decisions, omit that subsection header.
 
@@ -369,6 +458,8 @@ Output the final summary:
 Refine session complete.
 
 Autonomous: <N> items processed
+  ✓ Pre-filtered <n> duplicates (host)
+  ✓ Pre-filtered <n> out-of-scope (host)
   ✓ Merged <n> duplicates
   ✓ Routed <n> items to distilled files
   ✓ Classified <n> 'other' items

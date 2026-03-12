@@ -181,6 +181,36 @@ If the Out of scope list is empty, classify every segment as ambiguous regardles
 2. If the segment has no heading: infer a ≤10-word title from the content.
 3. The title MUST NOT be blank.
 
+### Type inference
+
+Before writing the raw item, determine the `type` field using three phases. The seed command
+NEVER asks the user for type — all assignment is silent.
+
+**Phase 1 — Signal scan (high-confidence)**
+
+Scan the segment title and body for the following signals. If a signal matches, assign that
+type silently and proceed.
+
+| Signal in title or body | Infer type |
+|-------------------------|------------|
+| Normative modal verb used as a constraint: MUST, SHALL, SHOULD, cannot, required, forbidden | `requirement` |
+| Describes an API, event schema, endpoint, contract, integration protocol, or interface definition | `interface` |
+| Records a why/because/rationale, trade-off, or architectural decision | `decision` |
+| Ownership assertion: "X owns", "X is responsible for", "X team handles" | `responsibility` |
+| Describes a repository, service, library, tech stack, or deployment unit | `codebase` |
+| Assigns a person to a role, team, or title | `stakeholder` |
+| Actionable item: TODO, backlog, spike, implement, fix, migrate | `task` |
+| Meeting record: call notes, standup, retro, decision log, minutes of meeting | `mom` |
+
+**Phase 2 — Description/example comparison (fallback)**
+
+If no Phase 1 signal fired, compare the segment content against each type's `description`
+and `example` in types.yaml. Assign the type that scores clearly above the others, silently.
+
+**Phase 3 — `other` (last resort)**
+
+If neither phase resolves the type, assign `other` silently. Do not ask the user.
+
 ### Raw item format
 
 Write each in-scope or ambiguous segment as `<domain-root>/raw/<id>.md`:
@@ -191,7 +221,7 @@ id: <domain>-<YYYYMMDD>-<4 random hex chars>
 source:
   tool: seed
   location: <file path or URL — exact source, not the directory>
-type: <inferred type from types.yaml — same inference rules as /capture>
+type: <type determined by Type inference above>
 domain: <domain>
 tags: []
 captured_at: <current UTC timestamp in ISO 8601>

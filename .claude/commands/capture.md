@@ -65,12 +65,32 @@ Be decisive — do not ask the user.
 
 ## Step 5 — Infer type (if not provided via --type)
 
-Compare the body and title against each type's `description` and `example` in types.yaml.
-Select the type whose description and example most closely match the content.
+Use three phases in order. Stop at the first phase that resolves the type.
 
-- **High confidence** (clear, unambiguous match): assign silently, do not prompt.
-- **Low confidence** (two or more types are plausible): present the top candidates with their
-  descriptions and ask once:
+### Phase 1 — Signal scan (high-confidence, silent)
+
+Scan the title and body for the following signals. If a signal matches, assign that type
+silently and proceed to Step 6. Do not prompt.
+
+| Signal in title or body | Infer type |
+|-------------------------|------------|
+| Normative modal verb used as a constraint: MUST, SHALL, SHOULD, cannot, required, forbidden | `requirement` |
+| Describes an API, event schema, endpoint, contract, integration protocol, or interface definition | `interface` |
+| Records a why/because/rationale, trade-off, or architectural decision | `decision` |
+| Ownership assertion: "X owns", "X is responsible for", "X team handles" | `responsibility` |
+| Describes a repository, service, library, tech stack, or deployment unit | `codebase` |
+| Assigns a person to a role, team, or title | `stakeholder` |
+| Actionable item: TODO, backlog, spike, implement, fix, migrate | `task` |
+| Meeting record: call notes, standup, retro, decision log, minutes of meeting | `mom` |
+
+### Phase 2 — Description/example comparison (fallback)
+
+If no Phase 1 signal fired, compare the body and title against each type's `description`
+and `example` in types.yaml.
+
+- **Clear winner** (one type scores clearly above all others): assign silently, do not prompt.
+- **Genuine tie** (two or more types remain equally plausible after comparison): present the
+  top candidates with their descriptions and ask once:
 
   ```
   Type is ambiguous. Which best fits this capture?
@@ -85,6 +105,15 @@ Select the type whose description and example most closely match the content.
   ```
 
   Wait for the user's reply, then proceed. Do not ask again.
+
+### Phase 3 — `other` (last resort only)
+
+Assign type `other` silently **only** when: no Phase 1 signal fired AND no clear winner
+emerged from Phase 2 AND (if the ambiguity prompt was shown) the user replied with "other"
+or equivalent.
+
+`other` MUST NOT be assigned as a first resort. It signals to the refine agent that
+classification was not possible at capture time.
 
 ---
 
