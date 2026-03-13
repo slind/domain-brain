@@ -385,3 +385,26 @@ Design assumptions established during the Feature 003 (refine pipeline performan
 | No retroactive reclassification | Existing `other`-typed items already in the raw queue are not retroactively reclassified; the improvement applies only to newly captured or seeded items. |
 
 ---
+
+## Design Clarifications — Feature 004 Specification Session (2026-03-12)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-b7c8, domain-20260312-c9d1, domain-20260312-d2e3]
+
+Design assumptions and constraints established during the Feature 004 (backlog lifecycle) specification session:
+
+| Assumption / Constraint | Detail |
+|---|---|
+| Delivery mechanism | Claude command file (`.claude/commands/triage.md`) — no standalone application, no external services. |
+| Command surface | `/triage` (new); `/query` extended with `task-management` mode; `/refine` extended with priority assignment and updated entry format. |
+| Storage format | Markdown with YAML frontmatter in version-controlled repository; all files human-readable (`distilled/backlog.md`, `config/priorities.md`). |
+| Host AI and orchestration | Claude (claude-sonnet-4-6+); the priority subagent is an Agent tool invocation orchestrated by `/triage`. No new dependencies beyond built-in tools. |
+| Backlog Entry schema | Task-typed item with `Status` (`open`\|`in-progress`\|`done`) and `Priority` (`high`\|`medium`\|`low`) fields in `distilled/backlog.md`. The `## Done` section is a structural divider within the same file, not a separate file. |
+| Priority Guidelines document | Persistent steward-maintained file (`config/priorities.md`) encoding strategic focus as human-readable rules. Read by priority subagent and `/refine` when processing new task items. Optional — if absent, defaults apply. |
+| Triage Session scope | A single conversational `/triage` invocation. May span multiple user turns. Each session that closes or drops items appends to the changelog. |
+| `distilled/backlog.md` pre-existence | Assumed to already exist (created by the existing `/refine` pipeline) when `/triage` is invoked. |
+| Speckit handoff | `/triage` treats the speckit.specify workflow as an available handoff target when starting work on a backlog item. |
+| Priority inference at `/refine` time | Uses the same AI-judgment approach as scope classification — heuristic, not keyword matching — guided by `config/priorities.md`. |
+| Drop vs Close governance | "Drop" (cancel without completion) is a governed decision because it is potentially irreversible and audit-worthy. "Close" (completed) requires only a rationale. |
+
+---

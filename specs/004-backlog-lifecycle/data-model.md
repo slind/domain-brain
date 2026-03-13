@@ -1,0 +1,221 @@
+# Data Model: Backlog Lifecycle Support
+
+**Feature**: `004-backlog-lifecycle`
+**Date**: 2026-03-12
+
+---
+
+## Entity 1: Backlog Entry (extended)
+
+A task-typed knowledge item in `domain/distilled/backlog.md`. This feature adds two new mandatory fields.
+
+### Full entry format (after migration)
+
+```markdown
+## <Title>
+**Type**: task
+**Status**: open | in-progress | done
+**Priority**: high | medium | low
+**Captured**: YYYY-MM-DD
+**Source**: [<raw-item-id>]
+
+<Body text — free-form description of the work>
+
+---
+```
+
+### Field definitions
+
+| Field | Values | Default | Set by |
+|---|---|---|---|
+| `**Status**` | `open`, `in-progress`, `done` | `open` | `/refine` (initial); `/triage` (lifecycle) |
+| `**Priority**` | `high`, `medium`, `low` | `medium` | `/refine` (initial, guidelines-driven); `/triage` (direct or AI-proposed) |
+| `**Type**` | `task` (fixed for backlog entries) | — | `/refine` |
+| `**Captured**` | YYYY-MM-DD | — | `/refine` |
+| `**Source**` | raw item id | — | `/refine` |
+
+### Field placement rule
+
+`**Status**` and `**Priority**` MUST appear directly after `**Type**`, in that order:
+
+```
+**Type**: task
+**Status**: open
+**Priority**: medium
+```
+
+### State transitions
+
+```
+                 /triage "start N"
+    open  ──────────────────────────►  in-progress
+      │                                     │
+      │  /triage "close N" or "drop N"      │  /triage "close N"
+      ▼                                     ▼
+    done  ◄─────────────────────────────  done
+```
+
+- `open` → `in-progress`: via `/triage "start N"`
+- `open` → `done`: via `/triage "close N"` (requires rationale)
+- `in-progress` → `done`: via `/triage "close N"` (requires rationale)
+- `open` / `in-progress` → `done` (dropped): via `/triage "drop N"` governed decision
+- No backward transitions. Once `done`, entry is moved to `## Done` section and is not re-opened.
+
+### Priority rules
+
+- Direct assignment: immediate write, no confirmation
+- Hint-driven: AI proposes, user confirms before write
+- Guidelines-driven: AI assigns at `/refine` time, based on `config/priorities.md`
+- Manual flag: if a user explicitly set a priority (direct assignment), any AI-proposed change to that item MUST be flagged with ⚠ in the proposal table
+
+---
+
+## Entity 2: Done Section
+
+A structural divider within `backlog.md` that collects completed entries. Not a separate entity — a heading within the file.
+
+### Structure
+
+```markdown
+# Backlog
+
+<!-- Actionable work items ... -->
+
+## <open item 1>
+...
+---
+
+## <open item 2>
+...
+---
+
+## Done
+
+## <done item 1>
+**Status**: done
+**Priority**: medium
+...
+---
+```
+
+### Rules
+
+- `## Done` heading is created by `/triage` on first close if it does not already exist
+- All open items appear above `## Done`; all done items appear below it
+- Done items retain all their original fields (Status: done, Priority: unchanged)
+- Within the Done section, items are ordered by closure date (most recent last — append order)
+
+---
+
+## Entity 3: Priority Guidelines Document
+
+Persistent file at `domain/config/priorities.md`. Human-editable. Read by the priority subagent and by `/refine` when processing new task items.
+
+### Format
+
+```markdown
+# Priority Guidelines
+
+Guidelines used by the domain brain to assign and adjust task priorities.
+Update these to reflect current team focus and strategic direction.
+Run /triage → "apply guidelines" to re-rank the current backlog.
+
+## Elevate to High
+- <rule in plain English>
+- <rule in plain English>
+
+## Keep at Medium
+- <rule in plain English>
+
+## Defer to Low
+- <rule in plain English>
+```
+
+### Rules
+
+- File is optional. If absent, `/refine` defaults all new items to `medium`; `/triage` hint-driven mode works without it (subagent reasons from hint alone)
+- File is created by `/triage` on first "update guidelines" request (template + user rules in one exchange)
+- Sections must use these exact headings: `## Elevate to High`, `## Keep at Medium`, `## Defer to Low`
+- Each section contains bullet-point rules in natural language
+- Human may edit the file directly between triage sessions
+
+---
+
+## Entity 4: Triage Changelog Entry
+
+Appended to `domain/distilled/changelog.md` by `/triage` when a close or drop action is executed. Only close/drop sessions generate a changelog entry — priority-only sessions do not.
+
+### Format
+
+```markdown
+## YYYY-MM-DD — Triage Session
+
+### Closed
+- [close]: <raw-item-id> → <title>
+  Rationale: "<user's words>"
+
+### Dropped
+- [drop]: <raw-item-id> → <title>
+  Decision: <chosen option, e.g., "de-prioritised to low (kept open)" or "marked done">
+  Rationale: "<user's words>"
+
+---
+```
+
+- Each close or drop is a bullet under its respective subsection
+- Multiple closes in one session are listed together under `### Closed`
+- If a session has only closes (no drops), omit `### Dropped` and vice versa
+- Rationale is the user's literal words; if user provided no rationale, record "no rationale provided"
+
+---
+
+## Entity 5: Priority Proposal (ephemeral)
+
+Generated by the hint-driven or guidelines-driven subagent. Exists only during a triage session — never persisted to a file.
+
+### Subagent output format
+
+```json
+PRIORITY_PROPOSAL:
+[
+  {
+    "item_num": 2,
+    "title": "Enterprise API Integration for /seed",
+    "current": "medium",
+    "proposed": "high",
+    "reason": "matches enterprise integration hint",
+    "was_manual": false
+  }
+]
+```
+
+### Display format (shown to user before confirmation)
+
+```
+Proposed priority changes (N items):
+
+  #  Title                                  Current → Proposed  Note
+  2  Enterprise API Integration for /seed   medium  → high
+  5  Semantic Duplicate Detection           medium  → high
+ 10  Multi-AI Host Support                  medium  → low       ⚠ previously manual
+
+Apply these changes? (yes / no / select N,M to apply only some)
+```
+
+### Validation rules
+
+- `was_manual: true` MUST produce ⚠ flag in display
+- Proposed value must differ from current value (no no-op entries in proposal)
+- `item_num` references the sequential display number from the current `/triage` session, not a stored ID
+
+---
+
+## Schema Migration: Existing 12 Entries
+
+All 12 existing entries in `backlog.md` must be backfilled:
+
+| Entry | Current format | After migration |
+|---|---|---|
+| All 12 | `**Type**: task` followed by `**Captured**` | `**Type**: task` + `**Status**: open` + `**Priority**: medium` + `**Captured**` |
+
+Migration is mechanical (no normative judgment). Default priority `medium` for all entries.

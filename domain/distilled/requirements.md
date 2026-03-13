@@ -436,3 +436,157 @@ A user invokes `/capture` or `/seed` to add new knowledge items. Instead of defa
 - **SC-005**: No `/refine` session triggers a full-distilled-files load unless at least one item in the batch genuinely cannot be typed (i.e., is legitimately `other`).
 
 ---
+
+## Feature 004 — User Stories (US1–US6)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-b1a2, domain-20260312-c3d4, domain-20260312-d5e6, domain-20260312-e7f8, domain-20260312-f9a1, domain-20260312-a2b3]
+
+### US1 — View and Prioritise the Backlog (P1)
+A domain steward invokes `/triage` and immediately sees the full backlog organised by priority and status. They can directly set the priority of any item in a single interaction.
+
+**Acceptance scenarios**:
+1. Given a backlog with open items of mixed priority, When a user invokes `/triage`, Then items displayed grouped as: in-progress first, then high/medium/low, with item numbers for reference.
+2. Given backlog displayed, When user says "set 4 to high", Then item 4's priority updated immediately, no confirmation required.
+3. When user says "show done", Then Done section listed.
+4. Given empty backlog, Then friendly message shown ("Backlog is empty — capture some items first with /capture") with no error.
+
+### US2 — AI-Assisted Reprioritisation (P2)
+A domain steward gives a natural language hint and receives a proposed priority re-ranking as a table before any modification is made. The user confirms or rejects before anything is written.
+
+**Acceptance scenarios**:
+1. Given populated backlog, When user gives a hint, Then proposed changes shown as table (item, current priority, proposed priority) and written only after confirmation.
+2. When user says "yes"/"apply", Then all changes written in single operation.
+3. When user says "no"/"cancel", Then no changes made.
+4. Given hint matches no items, Then system reports no matches and asks if user wants to rephrase.
+5. When user says "apply guidelines" and guidelines document exists, Then full re-ranking proposed before applying.
+
+### US3 — Start Work on an Item (P2)
+A domain steward picks a backlog item. The system marks it `in-progress` and offers a pre-populated handoff to the feature spec workflow in one confirmation.
+
+**Acceptance scenarios**:
+1. Given open item at position N, When user says "start N", Then system marks it `in-progress` and asks "Ready to start speccing?".
+2. Given confirmation prompt shown, When user says "yes", Then spec workflow launched with item's description pre-loaded.
+3. Given item already `in-progress`, When user says "start N", Then system notes it is already in progress and asks if user wants to continue speccing it anyway.
+4. When user says "not yet", Then item remains `in-progress` but spec workflow not launched.
+
+### US4 — Close or Drop a Completed Item (P3)
+A domain steward closes a finished item or removes a cancelled one. System requires a rationale before closing and records it in the audit log. Done items remain visible in a dedicated section.
+
+**Acceptance scenarios**:
+1. Given open item, When user says "close N", Then system asks for a one-line rationale before making any change.
+2. Given rationale provided, Then item marked `done`, moved to Done section in `backlog.md`, and changelog entry appended.
+3. When user says "drop N" or "remove N", Then governed decision presented with at least two options plus "flag as unresolved".
+4. Given "mark as done — dropped" option chosen, Then item moved to Done with reason recorded.
+
+### US5 — Maintain Priority Guidelines (P3)
+A domain steward creates or updates a persistent guidelines document. New items from `/refine` are automatically assigned initial priority based on these guidelines. Steward can also trigger bulk re-ranking.
+
+**Acceptance scenarios**:
+1. Given no guidelines document, When user says "update guidelines", Then system presents template and writes `config/priorities.md` in single exchange.
+2. Given guidelines document exists, When user says "update guidelines", Then system shows current content and allows selective updates.
+3. Given guidelines exist, When new task processed by `/refine`, Then backlog entry's `**Priority**` set according to guidelines, not always `medium`.
+4. Given no guidelines, Then new items default to `**Priority**: medium`.
+5. When user says "apply guidelines", Then proposed re-rankings for all open items presented, awaiting confirmation before applying.
+
+### US6 — Query Backlog via Natural Language (P3)
+Anyone can ask natural language questions about backlog state via `/query` and receive a grounded, prioritised answer without needing to invoke `/triage`.
+
+**Acceptance scenarios**:
+1. Given populated backlog, When user asks "what's on the backlog?", Then `/query` classifies as `task-management` mode and returns open items grouped by priority.
+2. Given item is in-progress, When user asks "what are we working on?", Then in-progress item highlighted in response.
+3. When user asks "what's done?", Then `/query` returns the Done section from `backlog.md`.
+
+---
+
+## Feature 004 — Edge Cases
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-b4c5]
+
+- **Empty backlog**: `/triage` shows a helpful message rather than an error or blank output.
+- **All items in-progress or done**: `/triage` reports "no open items" and shows the in-progress / done sections.
+- **Hint matches no items**: System reports no matches and offers to rephrase rather than silently applying no changes.
+- **Guidelines file missing**: `/refine` defaults new items to `medium`; `/triage` hint-driven reprioritisation works without guidelines by asking the user to describe their intent more specifically.
+- **User starts an already-in-progress item**: System notes the item is already in-progress and asks whether to re-launch the spec workflow.
+- **User provides no rationale on close**: System asks once. If still no rationale, defaults to "no rationale provided" and proceeds — does not block the close.
+- **Conflict between hint and explicit priority**: If a user previously set an item to `high` manually, a hint-driven proposal to lower it is clearly flagged as "overriding a manual assignment" in the proposal table.
+
+---
+
+## Feature 004 — Functional Requirements: /triage Command (FR-001–FR-011)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-c6d7]
+
+- **FR-001**: System MUST provide a `/triage` command as the single entry point for all backlog lifecycle operations (view, prioritise, start, close, drop, guidelines).
+- **FR-002**: `/triage` MUST display backlog items grouped in this order: in-progress → high → medium → low, with sequential item numbers for reference.
+- **FR-003**: `/triage` MUST support direct priority assignment ("set N to high/medium/low") without requiring confirmation.
+- **FR-004**: `/triage` MUST support hint-driven priority reassignment via an AI subagent that proposes changes as a table; changes MUST require explicit user confirmation before being written.
+- **FR-005**: Hint-driven proposals MUST clearly show current priority and proposed priority for each affected item, and MUST flag items whose priority was previously set manually.
+- **FR-006**: `/triage` MUST mark an item `in-progress` and offer a pre-populated handoff to the feature spec workflow when the user starts an item.
+- **FR-007**: The spec workflow handoff MUST be triggered by a single confirmation ("yes" / "ready") and MUST pre-populate the feature description with the backlog item's body text.
+- **FR-008**: `/triage` MUST require a rationale before closing an item and MUST record the rationale in the audit log.
+- **FR-009**: Closed items MUST be moved to a `## Done` section at the bottom of `backlog.md`, not deleted.
+- **FR-010**: Dropping an item MUST be a governed decision presenting at least two alternatives plus "flag as unresolved".
+- **FR-011**: Every close or drop action MUST append a structured entry to `distilled/changelog.md` including item id, title, date, and rationale.
+
+---
+
+## Feature 004 — Functional Requirements: Priority Guidelines (FR-012–FR-014)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-d8e9]
+
+- **FR-012**: System MUST support a persistent priority guidelines document (`config/priorities.md`) describing what types of items should be elevated, kept at medium, or deferred to low.
+- **FR-013**: `/triage` MUST provide a guided single-exchange interaction for creating or updating the guidelines document.
+- **FR-014**: When guidelines are updated, `/triage` MUST offer to re-rank the existing open backlog against the new guidelines (with confirmation gate before applying).
+
+---
+
+## Feature 004 — Functional Requirements: /refine Integration (FR-015–FR-016)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-e1f2]
+
+- **FR-015**: When `/refine` routes a new task item to `backlog.md`, the resulting entry MUST include `**Status**: open` and `**Priority**: <value>`.
+- **FR-016**: If `config/priorities.md` exists, `/refine` MUST use a subagent to evaluate the new item against the guidelines and assign an appropriate priority. If the file does not exist, priority defaults to `medium`.
+
+---
+
+## Feature 004 — Functional Requirements: /query Integration (FR-017–FR-019)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-f3a4]
+
+- **FR-017**: `/query` MUST support a `task-management` reasoning mode triggered by questions about backlog state ("what's open", "what's in progress", "what should we work on", "what's done").
+- **FR-018**: The `task-management` mode MUST return items grouped by priority (high → medium → low) with in-progress items highlighted.
+- **FR-019**: The `task-management` mode MUST load only `backlog.md` (no other distilled files).
+
+---
+
+## Feature 004 — Functional Requirements: Backlog Entry Schema (FR-020–FR-022)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-a5b6]
+
+- **FR-020**: Every backlog entry MUST carry a `**Status**` field with values `open`, `in-progress`, or `done`.
+- **FR-021**: Every backlog entry MUST carry a `**Priority**` field with values `high`, `medium`, or `low`.
+- **FR-022**: All 12 existing backlog entries MUST be backfilled with `**Status**: open` and `**Priority**: medium` as the initial migration.
+
+---
+
+## Feature 004 — Success Criteria (SC-001–SC-007)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-e4f5]
+
+- **SC-001**: A user can view the full prioritised backlog and make at least one priority change in under 2 minutes from invoking `/triage`.
+- **SC-002**: 100% of priority changes proposed by AI (hint-driven or guidelines-driven) require explicit user confirmation before being written — zero silent modifications.
+- **SC-003**: A user can go from "start item N" to an active feature spec session in a single `/triage` interaction, with zero manual copy-paste of the item description.
+- **SC-004**: 100% of close and drop actions produce a changelog entry — zero silent removals from the active backlog.
+- **SC-005**: When a priority guidelines document exists, 100% of new task items processed by `/refine` arrive in `backlog.md` with a priority field set by the guidelines (not always defaulting to `medium`).
+- **SC-006**: A user can update priority guidelines and see a proposed full re-ranking of the existing backlog within the same `/triage` session.
+- **SC-007**: All common backlog status queries ("what's open?", "what's in progress?", "what should we work on?") return a cited answer via `/query` without invoking `/triage`.
+
+---

@@ -4,6 +4,8 @@
 
 ## Enterprise API Integration for /seed
 **Type**: task
+**Status**: open
+**Priority**: low
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c001]
 
@@ -13,6 +15,8 @@ Extend `/seed` to read directly from Confluence, Notion, Jira, and SharePoint vi
 
 ## Large Domain Support — Hosted Vector Index
 **Type**: task
+**Status**: open
+**Priority**: low
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c002]
 
@@ -22,6 +26,8 @@ Implement the hosted index retrieval strategy for domains exceeding 500 distille
 
 ## Cross-Domain Federation
 **Type**: task
+**Status**: open
+**Priority**: low
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c003]
 
@@ -31,6 +37,8 @@ Design and implement a federation layer that allows `/query` to reason across mu
 
 ## Automated / Event-Triggered Seeding
 **Type**: task
+**Status**: open
+**Priority**: low
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c004]
 
@@ -40,6 +48,8 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 
 ## Semantic Duplicate Detection in /refine
 **Type**: task
+**Status**: open
+**Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c005]
 
@@ -49,6 +59,8 @@ Upgrade the host pre-filtering stage in `/refine` from byte-for-byte exact match
 
 ## Additional Specialist Subagents in /refine
 **Type**: task
+**Status**: open
+**Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c006]
 
@@ -58,6 +70,8 @@ Extend the specialist subagent roster beyond the three mandated by Feature 003 F
 
 ## Distilled File Auto-Splitting
 **Type**: task
+**Status**: open
+**Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c007]
 
@@ -67,6 +81,8 @@ Implement the distilled file auto-splitting mechanism specified in Feature 001 E
 
 ## Knowledge Staleness Detection
 **Type**: task
+**Status**: open
+**Priority**: medium
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c008]
 
@@ -76,6 +92,8 @@ Introduce a mechanism to surface distilled entries that may have become outdated
 
 ## Changelog / Trend Query Mode for /query
 **Type**: task
+**Status**: open
+**Priority**: medium
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c009]
 
@@ -85,6 +103,8 @@ Add a sixth reasoning mode to `/query` — `trend-analysis` or `changelog-query`
 
 ## Onboarding Briefing Command (/onboard or /tour)
 **Type**: task
+**Status**: open
+**Priority**: medium
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c00a]
 
@@ -94,6 +114,8 @@ Implement an `/onboard` (or `/tour`) command that compiles a structured domain b
 
 ## Backlog Activation and Task-Management Query Mode
 **Type**: task
+**Status**: open
+**Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c00b]
 
@@ -103,9 +125,24 @@ Activate `distilled/backlog.md` as a live, queryable workflow surface by: (1) ad
 
 ## Multi-AI Host Support
 **Type**: task
+**Status**: open
+**Priority**: low
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c00c]
 
 Extend the command-file architecture to support AI hosts beyond Claude, realising the stated product vision in Feature 001 Technical Constraints ("the system should eventually support AI hosts beyond Claude — a stated product direction, not a current requirement"). The storage layer (Markdown with YAML frontmatter in git) is already AI-agnostic per ADR-001; the gap is the invocation mechanism, which currently relies on Claude command files and the Agent tool. Work involves abstracting the command interface so the same prompt instructions and knowledge files can be invoked by other AI assistants, defining a compatibility matrix, and identifying which built-in tool assumptions have equivalents in other host environments.
+
+---
+
+## Done
+
+## Backlog Entry Schema Migration — Existing 12 Entries
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-e8f9]
+
+Backfill all 12 existing entries in `distilled/backlog.md` to include the new `Status` and `Priority` fields introduced by Feature 004. Migration is mechanical — no normative judgment required; default priority `medium` for all pre-existing entries. This task directly enables the `/triage` command and `task-management` query mode to function correctly, as both depend on well-formed Status and Priority fields on every backlog entry.
 
 ---

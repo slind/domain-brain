@@ -89,6 +89,11 @@ full content as domain identity context for the subagent. If it does not exist, 
 without it — no error. The subagent uses the identity (pitch and scope lists) to make
 scope-aware archival decisions for seeded items.
 
+Additionally, attempt to read `<domain-root>/config/priorities.md`. If it exists, pass its
+full content to the generalist subagent as `priority_guidelines`. If it does not exist, pass
+`priority_guidelines: null`. The subagent uses the guidelines to assign initial priority to
+new task-typed items when routing them to `backlog.md`.
+
 ---
 
 ## Step 6.5 — Pre-filter batch
@@ -320,6 +325,31 @@ New entries written to distilled files follow this format:
 
 ---
 ```
+
+**Special case — task-typed items**: When routing a `task` item to `backlog.md`, the entry
+MUST include `**Status**: open` and `**Priority**: <value>` immediately after `**Type**: task`:
+
+```markdown
+## <Title>
+**Type**: task
+**Status**: open
+**Priority**: <high | medium | low>
+**Captured**: <YYYY-MM-DD from raw item>
+**Source**: <raw item id>
+
+<Body content, summarised if needed>
+
+---
+```
+
+**Priority assignment for task items**:
+- If `priority_guidelines` context was passed by the host (non-null): evaluate the item's
+  title and body against the guidelines. Assign the priority that best matches the applicable
+  rule (`high`, `medium`, or `low`). Use semantic judgment — guidelines are written in plain
+  English, not keyword lists.
+- If `priority_guidelines` is null, or if the item does not clearly match any guideline rule:
+  assign `medium` as the default.
+- Record the assigned priority in the `content` field of the `route_and_summarise` action.
 
 For `aggregate` actions, append new facts to the existing entry's body rather than creating
 a new entry.

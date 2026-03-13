@@ -69,8 +69,11 @@ Select the mode whose trigger patterns best match the question:
 | `diagram` | "show me", "map", "structure", "components", "draw", "visualise", "topology" |
 | `stakeholder-query` | "who owns", "who is", "who's responsible", "which team", "point of contact" |
 | `decision-recall` | "decided", "why did we", "pending", "open decisions", "ADR", "what was chosen" |
+| `task-management` | "what's on the backlog", "open tasks", "what's open", "in progress", "what should I work on", "what should we work on", "what's done", "backlog status", "what are we working on", "what's next" |
 
 If the question matches none clearly, default to `gap-analysis`.
+
+`task-management` takes priority over `gap-analysis` when backlog-specific language is present.
 
 ### 3b — Candidate files
 
@@ -84,6 +87,7 @@ Select only the files that are relevant to the query. Non-candidate files MUST N
 | `diagram` | `domain.md`, `codebases.md`, `interfaces.md` |
 | `stakeholder-query` | `domain.md`, `stakeholders.md` |
 | `decision-recall` | `decisions.md` |
+| `task-management` | `backlog.md` only |
 
 Additionally, for any mode: if a topic keyword in the question strongly suggests another
 candidate file (e.g., "backlog" → `backlog.md`, "changelog" → `changelog.md`), add it.
@@ -151,7 +155,7 @@ If both conditions are met:
 4. Read the top-N matching chunks (up to 5 chunks).
 5. Add matched chunks to the retrieval context with source labels `[<doc-id> / <chunk-id>]`.
 
-For `gap-analysis` and `diagram` modes: skip this step entirely.
+For `gap-analysis`, `diagram`, and `task-management` modes: skip this step entirely.
 
 ---
 
@@ -194,6 +198,32 @@ If the chunk cap was reached:
 Note: Context capped at 20 entries. Some potentially relevant entries may not be included.
 For better results, try a more specific query (e.g., ask about a specific component or team).
 ```
+
+### task-management mode response format
+
+For `task-management` mode, structure the answer body as:
+
+```
+## Backlog Status
+
+▶ In Progress (N):
+  - <title>  [in-progress]
+
+## High Priority (N):
+  - <title>
+  - <title>
+
+## Medium Priority (N):
+  - <title>
+  ...
+
+## Low Priority (N):
+  - <title>
+```
+
+Omit any section with zero items. If the question is specifically about in-progress work
+("what are we working on?"), show only the In Progress section. If specifically about done
+work ("what's done?"), show only items from the `## Done` section of `backlog.md`.
 
 ### Answer body
 

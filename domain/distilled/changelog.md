@@ -171,3 +171,28 @@
 - [route_and_summarise]: domain-20260312-c00c → Multi-AI Host Support → backlog.md
 
 ---
+
+## 2026-03-12 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260312-b1a2, c3d4, d5e6, e7f8, f9a1, a2b3 → Feature 004 User Stories (US1–US6) → requirements.md
+- [route_and_summarise]: domain-20260312-b4c5 → Feature 004 Edge Cases → requirements.md
+- [route_and_summarise]: domain-20260312-c6d7 → Feature 004 FR: /triage Command (FR-001–FR-011) → requirements.md
+- [route_and_summarise]: domain-20260312-d8e9 → Feature 004 FR: Priority Guidelines (FR-012–FR-014) → requirements.md
+- [route_and_summarise]: domain-20260312-e1f2 → Feature 004 FR: /refine Integration (FR-015–FR-016) → requirements.md
+- [route_and_summarise]: domain-20260312-f3a4 → Feature 004 FR: /query Integration (FR-017–FR-019) → requirements.md
+- [route_and_summarise]: domain-20260312-a5b6 → Feature 004 FR: Backlog Entry Schema (FR-020–FR-022) → requirements.md
+- [route_and_summarise]: domain-20260312-e4f5 → Feature 004 Success Criteria (SC-001–SC-007) → requirements.md
+- [route_and_summarise]: domain-20260312-f6a7, a8b9, b1c2, c3d5, d6e7 → /triage Backlog Lifecycle Data Model (5 entities) → interfaces.md
+- [route_and_summarise]: domain-20260312-b7c8, c9d1, d2e3 → Design Clarifications Feature 004 session → decisions.md
+- [route_and_summarise]: domain-20260312-e8f9 → Backlog Entry Schema Migration task (priority: high) → backlog.md
+
+---
+
+## 2026-03-13 — Triage Session
+
+### Closed
+- [close]: domain-20260312-e8f9 → Backlog Entry Schema Migration — Existing 12 Entries
+  Rationale: "All 12 entries already carry Status and Priority fields — migration complete."
+
+---
