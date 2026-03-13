@@ -22,10 +22,19 @@ The fundamental unit of captured knowledge in Domain Brain. A Raw Item represent
 
 **Body**: Free-form Markdown containing the captured knowledge.
 
-**State transitions**: `raw` → `refined` (processed in a refine session); `refined` → `archived` (cleaned up after distillation).
+**State transitions**:
+
+| Transition | Trigger | Set by |
+|---|---|---|
+| `raw` → `refined` | Processed in a refine session (subagent) | Refine subagent, Steps 9/10 |
+| `raw` → `refined` (duplicate) | Exact body match found in distilled files during host pre-filter | Host Step 6.5 |
+| `raw` → `refined` (out-of-scope) | High-confidence Out-of-scope match during host pre-filter | Host Step 6.5 |
+| `refined` → `archived` | Cleaned up after distillation | Post-session cleanup |
+
+The two pre-filter transitions (duplicate, out-of-scope) bypass subagent invocation entirely; no new distilled entry is created.
 
 **Type**: codebase
-**Source items**: [domain-20260306-a9b0]
+**Source items**: [domain-20260306-a9b0, domain-20260312-a1b3]
 
 ---
 
@@ -223,5 +232,90 @@ A Seed Session is an in-memory record maintained during a single `/seed` invocat
 
 **Type**: codebase
 **Source items**: [domain-20260306-f5a6]
+
+---
+
+## Refine Pipeline — Type Clusters and Subagents
+**Type**: codebase
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-f0a7]
+
+The refine pipeline routes raw items to specialised processing tracks based on their type. Three concepts support this routing:
+
+**Type cluster**: A named grouping of related item types that maps to a single specialist subagent. The four clusters are: `requirements`, `interfaces`, `decisions`, and `generalist`. Each cluster receives only the distilled context files relevant to its types, keeping the subagent's context window focused.
+
+**Specialist subagent**: A subagent invoked by the refine host with a focused context window scoped to one type cluster (requirements, interfaces, or decisions). It receives only the items and distilled files for its cluster, produces a `SpecialistPlan`, and returns it to the host for merging.
+
+**Generalist subagent**: The existing single subagent, retained as the fallback cluster. Receives items that are unclassified (type `other`), or whose type does not map to any specialist cluster. Behaves identically to the pre-003 refine subagent with full distilled context.
+
+---
+
+## PreFilterResult
+**Type**: codebase
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-e2f9]
+
+An in-memory data structure produced by Step 6.5 of `/refine`. Represents a single raw item that was resolved by the host pre-filter before any subagent was invoked. Never written to disk; recorded only in the session log for the changelog.
+
+**Fields**:
+- `item_id` (string): the raw item id that was pre-filtered
+- `filter_reason` (`"duplicate"` | `"out_of_scope"`): the reason the item was resolved early
+- `matched_term` (string | null): the Out-of-scope term that matched, or `null` for duplicates
+- `matched_file` (string | null): the distilled file where the duplicate body was found, or `null` for out-of-scope matches
+
+**Persistence**: In-memory only. Not written to any file.
+
+---
+
+## TypeClusterBatch
+**Type**: codebase
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-4a8c]
+
+An in-memory data structure produced by the refine host after pre-filtering, immediately before specialist subagent invocation. Groups raw items by their assigned type cluster for focused processing. Never persisted to disk.
+
+**Fields**:
+- `cluster` (`"requirements"` | `"interfaces"` | `"decisions"` | `"generalist"`): the cluster this batch targets
+- `items` (RawItem[]): the raw items routed to this cluster
+- `context_files` (string[]): paths to the distilled files that should be loaded as context for this cluster's subagent
+
+**Lifecycle**: Created by the host routing step; consumed immediately by specialist subagent invocation; discarded after the `SpecialistPlan` is returned.
+
+**Persistence**: In-memory only. Not written to any file.
+
+---
+
+## SpecialistPlan
+**Type**: codebase
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-6b2d]
+
+The REFINE_PLAN returned by a specialist subagent after processing its `TypeClusterBatch`. Contains the autonomous actions and governed decisions produced for that cluster's items. Not persisted directly — merged into the session's `MergedRefinePlan` before execution.
+
+**Fields**:
+- `cluster` (string): the cluster name this plan originated from (e.g., `"requirements"`)
+- `autonomous_actions` (AutonomousAction[]): actions that can be executed without human approval
+- `governed_decisions` (GovernedDecision[]): decisions that require human input before execution
+
+**Lifecycle**: Returned by the specialist subagent; immediately merged into `MergedRefinePlan` by the host; not stored separately.
+
+**Persistence**: In-memory only. Not written to any file.
+
+---
+
+## MergedRefinePlan
+**Type**: codebase
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-9e1f]
+
+The concatenation of all `SpecialistPlan` instances returned by the specialist subagents in a single refine session. Consumed by Steps 8–10 of `/refine` to execute autonomous actions and present governed decisions to the human steward.
+
+**Fields**:
+- `autonomous_actions` (AutonomousAction[]): union of all autonomous actions across all specialist plans
+- `governed_decisions` (GovernedDecision[]): union of all governed decisions across all specialist plans
+
+**Construction**: The host iterates over all `TypeClusterBatch` invocations, collects each resulting `SpecialistPlan`, and concatenates their action lists. Order of actions within each list is preserved; cluster ordering follows the routing sequence.
+
+**Persistence**: In-memory only. Not written to any file.
 
 ---

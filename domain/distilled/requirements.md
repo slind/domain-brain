@@ -327,3 +327,112 @@ Satisfying mechanisms:
 - `/refine`: ADR-015 (type-aware context loading — only `routes_to` targets of batch item types loaded, plus `decisions.md` and `config/identity.md` always)
 
 ---
+
+## Feature 003 — User Stories (US1–US3)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-a3f1, domain-20260312-b7c2, domain-20260312-d9e4]
+
+### US1 — Fast Batch Processing via Host Pre-Filtering
+A user invokes `/refine` with a raw queue containing 20 items. Before any subagent is invoked, the host eliminates exact duplicates (items whose content already exists verbatim in the distilled knowledge base) and items that clearly fall outside the domain scope (as defined in `config/identity.md`). The subagent receives only the items that genuinely require reasoning.
+
+**Acceptance scenarios**:
+1. Given a raw queue item whose content is identical to an existing distilled entry, When `/refine` runs, Then the host discards or archives the item before invoking any subagent, and the item does not appear in the subagent's input.
+2. Given a raw queue item whose content matches a keyword or pattern explicitly listed in the domain's Out-of-scope list, When `/refine` runs, Then the host archives the item as out-of-scope before invoking any subagent.
+3. Given a batch of 20 items where 8 are duplicates and 4 are out-of-scope, When `/refine` runs, Then the subagent receives at most 8 items, and all 12 filtered items are accounted for in the session output.
+
+### US2 — Specialist Subagents Per Item-Type Cluster
+A user invokes `/refine` with a mixed batch containing requirements, interface definitions, and ADR items. Instead of routing all items to one generalist subagent, the host routes each item to a specialist subagent matched to its type cluster. Each specialist uses a focused context window containing only the distilled files relevant to its type.
+
+**Acceptance scenarios**:
+1. Given a raw item classified as type `requirement`, When `/refine` runs, Then the item is routed to the requirements specialist subagent, not a generalist.
+2. Given a raw item classified as type `interface`, When `/refine` runs, Then the item is routed to the interfaces specialist subagent with only interface-relevant distilled context loaded.
+3. Given a batch with items of three different type clusters, When `/refine` runs, Then each item is processed by its corresponding specialist and the host merges the results into a single session output.
+4. Given an item whose type cannot be determined, When `/refine` runs, Then the item falls back to the generalist subagent with full context.
+
+### US3 — Improved Type Inference at Capture and Seed Time
+A user invokes `/capture` or `/seed` to add new knowledge items. Instead of defaulting to type `other` when the type is ambiguous, the system applies higher-confidence inference rules to assign a specific type. This prevents `other`-typed items accumulating in the raw queue and triggering the full-load penalty during `/refine`.
+
+**Acceptance scenarios**:
+1. Given a captured item whose content clearly describes a system interface, When `/capture` runs, Then the item is assigned type `interface` rather than `other`.
+2. Given a captured item whose content clearly describes a decision or rationale, When `/capture` runs, Then the item is assigned type `decision` rather than `other`.
+3. Given a captured item that is genuinely ambiguous with no strong type signal, When `/capture` runs, Then the item is assigned type `other`.
+4. Given a `/refine` session where no items are typed `other`, When the host loads context, Then the full-distilled-files load is not triggered and only type-specific files are loaded.
+
+---
+
+## Feature 003 — Edge Cases
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-2f5a]
+
+- **Near-duplicate items**: Host pre-filtering handles only exact duplicates; semantically similar but non-identical items pass through to the subagent for reasoning.
+- **Batch spans more types than specialist subagents exist**: Items whose type has no dedicated specialist fall back to the generalist subagent.
+- **Out-of-scope list empty or missing in `config/identity.md`**: Host pre-filtering skips scope-based elimination and passes all items to the subagent.
+- **Type inference confidence below threshold at capture time**: Item is stored as type `other` with a flag indicating low-confidence inference.
+- **Host pre-filters all items in a batch (nothing left for subagent)**: The `/refine` session completes immediately with a summary of what was filtered and why; no subagent is invoked.
+
+---
+
+## Feature 003 — Technical Constraints
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-4e1d]
+
+- **Delivery mechanism**: All changes are implemented as modifications to Claude command/skill files and their supporting prompt instructions — no standalone application.
+- **Command surface**: Changes affect `/refine` (host pre-filtering, specialist routing), `/capture` (type inference), and `/seed` (type inference for bulk-imported items). No new commands are introduced.
+- **Storage format**: Markdown with YAML frontmatter in version-controlled repository; no schema changes required.
+- **Host AI**: Claude (claude-sonnet-4-6+); specialist subagents are additional Agent tool invocations orchestrated by the existing host.
+
+---
+
+## Feature 003 — Functional Requirements: Pre-Filtering (FR-001–FR-004)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-8c6b]
+
+- **FR-001**: Before invoking any subagent, the `/refine` host MUST compare each raw item's content against all existing distilled entries and exclude exact duplicates from the subagent batch.
+- **FR-002**: Before invoking any subagent, the `/refine` host MUST evaluate each raw item against the Out-of-scope list in the domain identity document and exclude items that clearly match Out-of-scope criteria.
+- **FR-003**: Items excluded by pre-filtering MUST be accounted for in the session output (archived or discarded) with a reason recorded.
+- **FR-004**: Pre-filtering MUST NOT exclude items that are ambiguous or only partially matching Out-of-scope criteria; those MUST pass through to the subagent.
+
+---
+
+## Feature 003 — Functional Requirements: Specialist Subagents (FR-005–FR-009)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-8c6b]
+
+- **FR-005**: The `/refine` host MUST route each item to a subagent matched to the item's type cluster rather than always using a single generalist subagent.
+- **FR-006**: Each specialist subagent MUST receive only the distilled context files relevant to its type cluster (as defined by the type-routing rules established in ADR-015).
+- **FR-007**: At least the following type clusters MUST have dedicated specialists: `requirements`, `interfaces`, `decisions` (ADRs).
+- **FR-008**: Items of type `other` or any type without a dedicated specialist MUST fall back to the generalist subagent.
+- **FR-009**: The host MUST merge results from all specialist invocations into a single coherent session output before presenting results to the user.
+
+---
+
+## Feature 003 — Functional Requirements: Type Inference at Capture and Seed (FR-010–FR-014)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-8c6b]
+
+- **FR-010**: At `/capture` time, the system MUST apply type inference logic to assign the most specific applicable type to each new item.
+- **FR-011**: At `/seed` time, the same type inference logic MUST be applied to each item ingested from the source material, so that bulk-imported items arrive in the raw queue with specific types rather than defaulting to `other`.
+- **FR-012**: Type inference MUST use content signals (keywords, structural patterns, referenced entities) to distinguish between `requirements`, `interfaces`, `decisions`, and other known types.
+- **FR-013**: Type inference MUST assign type `other` only when no type-specific signal exceeds the confidence threshold.
+- **FR-014**: Items assigned type `other` at capture or seed time MUST be flagged to indicate that inference was inconclusive, to aid future reclassification.
+
+---
+
+## Feature 003 — Success Criteria (SC-001–SC-005)
+**Type**: requirement
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-3b9c]
+
+- **SC-001**: At least 30% of raw items in a representative batch are eliminated by host pre-filtering (duplicate or out-of-scope) before any subagent is invoked, reducing subagent input size by at least 30% on average.
+- **SC-002**: At least 70% of raw items are processed fully autonomously (no human intervention required) across a representative set of `/refine` sessions, meeting the existing SC-002 autonomy target more consistently than the baseline.
+- **SC-003**: The governed-decision rate (items escalated to human review) drops by at least 20% for batches processed by specialist subagents compared to the generalist baseline on the same item types.
+- **SC-004**: Fewer than 20% of newly captured or seeded items are assigned type `other` after the improved inference is in place, compared to the pre-improvement baseline.
+- **SC-005**: No `/refine` session triggers a full-distilled-files load unless at least one item in the batch genuinely cannot be typed (i.e., is legitimately `other`).
+
+---

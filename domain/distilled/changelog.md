@@ -132,3 +132,42 @@
   Decided by: Søren Lindstrøm | Rationale: "A"
 
 ---
+
+## 2026-03-12 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260312-a3f1, b7c2, d9e4 → Feature 003 User Stories (US1–US3) → requirements.md
+- [route_and_summarise]: domain-20260312-2f5a → Feature 003 Edge Cases → requirements.md
+- [route_and_summarise]: domain-20260312-4e1d → Feature 003 Technical Constraints → requirements.md
+- [route_and_summarise]: domain-20260312-8c6b → Feature 003 Functional Requirements (FR-001–FR-014) → requirements.md
+- [route_and_summarise]: domain-20260312-3b9c → Feature 003 Success Criteria (SC-001–SC-005) → requirements.md
+- [route_and_summarise]: domain-20260312-7d2e → Design Assumptions Feature 003 session → decisions.md
+- [aggregate]: domain-20260312-5f3b → updated /capture Interface Contract type inference section with 3-phase signal-table approach → interfaces.md
+- [aggregate]: domain-20260312-0c4a → added Specialist Routing table to /refine Interface Contract → interfaces.md
+- [split]: domain-20260312-f0a7 → new entry "Refine Pipeline — Type Clusters and Subagents" (Type cluster, Specialist subagent, Generalist subagent); pre-existing entity references archived → codebases.md
+- [aggregate]: domain-20260312-a1b3 → extended Raw Item entry with pre-filter status transition table → codebases.md
+- [archive_only]: domain-20260312-c5d7 → trivially implied by existing Distilled Entry documentation; no new information added
+- [route_and_summarise]: domain-20260312-e2f9 → PreFilterResult entity definition → codebases.md
+- [route_and_summarise]: domain-20260312-4a8c → TypeClusterBatch entity definition → codebases.md
+- [route_and_summarise]: domain-20260312-6b2d → SpecialistPlan entity definition → codebases.md
+- [route_and_summarise]: domain-20260312-9e1f → MergedRefinePlan entity definition → codebases.md
+
+---
+
+## 2026-03-12 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260312-c001 → Enterprise API Integration for /seed → backlog.md
+- [route_and_summarise]: domain-20260312-c002 → Large Domain Support — Hosted Vector Index → backlog.md
+- [route_and_summarise]: domain-20260312-c003 → Cross-Domain Federation → backlog.md
+- [route_and_summarise]: domain-20260312-c004 → Automated / Event-Triggered Seeding → backlog.md
+- [route_and_summarise]: domain-20260312-c005 → Semantic Duplicate Detection in /refine → backlog.md
+- [route_and_summarise]: domain-20260312-c006 → Additional Specialist Subagents in /refine → backlog.md
+- [route_and_summarise]: domain-20260312-c007 → Distilled File Auto-Splitting → backlog.md
+- [route_and_summarise]: domain-20260312-c008 → Knowledge Staleness Detection → backlog.md
+- [route_and_summarise]: domain-20260312-c009 → Changelog / Trend Query Mode for /query → backlog.md
+- [route_and_summarise]: domain-20260312-c00a → Onboarding Briefing Command (/onboard or /tour) → backlog.md
+- [route_and_summarise]: domain-20260312-c00b → Backlog Activation and Task-Management Query Mode → backlog.md
+- [route_and_summarise]: domain-20260312-c00c → Multi-AI Host Support → backlog.md
+
+---

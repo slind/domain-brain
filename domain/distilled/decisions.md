@@ -367,3 +367,21 @@ The following capabilities are explicitly out of scope for Feature 002 (/frame a
 **Source items**: [domain-20260306-b3c4]
 
 ---
+
+## Design Assumptions — Feature 003 Specification Session (2026-03-12)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-7d2e]
+
+Design assumptions established during the Feature 003 (refine pipeline performance) specification session:
+
+| Assumption | Detail |
+|---|---|
+| Distilled files in memory during `/refine` | The host already has access to all distilled files in memory during a `/refine` session (per ADR-015); exact-duplicate detection requires no additional I/O. |
+| Definition of "exact duplicate" | Byte-for-byte identical content between the raw item and a distilled entry; semantic similarity detection is out of scope for this feature. |
+| Out-of-scope keyword matching | The Out-of-scope list in `config/identity.md` contains explicit keywords or patterns sufficient for deterministic matching; fuzzy scope detection is out of scope. |
+| Specialist subagent coverage | Three specialist subagents (`requirements`, `interfaces`, `decisions`) cover the majority of high-volume item types; additional specialists can be added in future iterations. |
+| Type inference mechanism | Type inference at `/capture` and `/seed` time uses heuristic content analysis; machine-learning-based classification is out of scope. |
+| No retroactive reclassification | Existing `other`-typed items already in the raw queue are not retroactively reclassified; the improvement applies only to newly captured or seeded items. |
+
+---

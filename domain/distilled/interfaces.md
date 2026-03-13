@@ -39,11 +39,40 @@
 
 ### Type Inference and Confirmation
 
-1. Load `config/types.yaml` from domain root.
-2. Match description against each type's `description` and `example` fields.
-3. If confidence is high (clear match): assign type silently.
-4. If confidence is low (ambiguous): display type options with descriptions and ask for confirmation. Present one question only.
-5. If `--type` is provided explicitly: use it without inference; skip confirmation.
+If `--type` is provided explicitly: use it without inference; skip all phases below.
+
+Otherwise, apply the three-phase inference sequence:
+
+**Phase 1 — Signal scan** (applied first; fastest path)
+
+Scan the title and body for the following signals. First match wins.
+
+| Signal in title or body | Inferred type |
+|---|---|
+| MUST, SHALL, SHOULD, cannot, required, forbidden (as normative constraints) | `requirement` |
+| API, event schema, endpoint, contract, integration protocol, interface definition | `interface` |
+| why, because, rationale, trade-off, architectural decision, ADR | `decision` |
+| "X owns", "X is responsible for", "X team handles" (ownership assertion) | `responsibility` |
+| repository, service, library, tech stack, deployment, microservice | `codebase` |
+| Person assigned to role, team, or title | `stakeholder` |
+| TODO, backlog, spike, implement, fix, migrate (action item) | `task` |
+| Meeting notes, call, standup, retro, decision log (meeting record) | `mom` |
+
+If a signal fires with high confidence: assign type silently and skip Phases 2 and 3.
+
+**Phase 2 — Description/example comparison** (fallback when no signal fires clearly)
+
+Load `config/types.yaml`. Match description against each type's `description` and `example` fields.
+- If confidence is high (clear match): assign type silently.
+- If confidence is low (ambiguous): display type options with descriptions and ask for confirmation. Present one question only.
+
+**Phase 3 — Last resort**
+
+If no type scores clearly above the others after Phase 2: ask the user to select a type. Assign `other` only if the user explicitly chooses it or does not respond.
+
+> **Note — /seed Step 7**: The same three-phase logic applies when `/seed` infers the type of a seeded raw item. The only difference is in Phase 3: `/seed` never asks the user — it assigns `other` silently when no type scores clearly above the others.
+
+**Source**: [domain-20260312-5f3b]
 
 ### Output Formats
 
@@ -115,6 +144,26 @@ Optionally (large document):
 8. COMMIT    Append changelog entry to distilled/changelog.md
 9. REPORT    Show session summary
 ```
+
+### Specialist Routing
+
+The `/refine` host routes each item to a TypeClusterBatch based on its type. Specialist clusters receive a reduced, focused context; the generalist cluster receives the full distilled context (identical to pre-Feature 003 behaviour).
+
+| Item type | Cluster | Context files loaded |
+|---|---|---|
+| `requirement` | requirements | requirements.md, decisions.md, identity.md |
+| `interface` | interfaces | interfaces.md, decisions.md, identity.md |
+| `decision` | decisions | decisions.md, identity.md |
+| `responsibility` | generalist | all distilled files, identity.md |
+| `codebase` | generalist | all distilled files, identity.md |
+| `stakeholder` | generalist | all distilled files, identity.md |
+| `task` | generalist | all distilled files, identity.md |
+| `mom` | generalist | all distilled files, identity.md |
+| `other` | generalist | all distilled files, identity.md |
+
+Context loading follows ADR-015: the host resolves routing targets before invoking the subagent. Items of type `other` (routes_to: null) trigger full load of all distilled files, consistent with ADR-015 behaviour.
+
+**Source**: [domain-20260312-0c4a]
 
 ### Autonomous Actions
 
