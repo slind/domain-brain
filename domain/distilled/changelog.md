@@ -2,6 +2,39 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-16 — Refine Session
+
+### Semantic Duplicates
+- [semantic_duplicate]: domain-20260316-7a1b → archived
+  Matched: Feature 007 done backlog entry + ADR-018
+  Basis: both describe the fix of stale codebase/responsibility routing rows in interfaces.md
+- [semantic_duplicate]: domain-20260316-8b1c → archived
+  Matched: /consistency-check Interface Contract (interfaces.md)
+  Basis: both describe the /consistency-check command overview and purpose
+- [semantic_duplicate]: domain-20260316-8b2d → archived
+  Matched: /consistency-check Interface Contract — staleness detection logic
+  Basis: both describe the user story for detecting stale distilled entries
+- [semantic_duplicate]: domain-20260316-8b3e → archived
+  Matched: /consistency-check Interface Contract — resolution flow
+  Basis: both describe the user story for acting on a staleness report
+- [semantic_duplicate]: domain-20260316-8b4f → archived
+  Matched: /consistency-check Interface Contract — edge case coverage
+  Basis: both enumerate edge cases for the consistency-check mechanism
+- [semantic_duplicate]: domain-20260316-9c4a → archived
+  Matched: Describes-Link Convention (codebases.md)
+  Basis: both describe the opt-in **Describes** field convention for linking distilled entries to source files
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260316-7a2c, 7a3d, 7a4e, 7a5f, 7a6a → Feature 007 — Fix Stale /refine Interface Contract Routing Table appended to requirements.md
+- [route_and_summarise]: domain-20260316-8b5a, 8b6b, 8b8d, 8b9e → Feature 008 — Consistency-Check Mechanism appended to requirements.md
+- [archive_only]: domain-20260316-8b7c → Key Entities summary superseded by detailed entity definitions in 9c1d/9c2e/9c3f
+- [classify_and_route]: domain-20260316-9c1d → reclassified requirement→codebase; Staleness Candidate entity appended to codebases.md
+- [classify_and_route]: domain-20260316-9c2e → reclassified requirement→codebase; Staleness Resolution entity appended to codebases.md
+- [classify_and_route]: domain-20260316-9c3f → reclassified requirement→codebase; ConsistencyCheckSession entity appended to codebases.md
+- [aggregate]: domain-20260316-9c5b → Changelog Entry Format subsection added to /consistency-check Interface Contract in interfaces.md
+
+---
+
 <!-- Session format:
 ## YYYY-MM-DD — Refine Session
 
@@ -14,6 +47,16 @@
 
 ---
 -->
+
+## 2026-03-16 — Triage Session
+
+### Closed
+- [close]: domain-20260316-c4e1 → Implement FR-024: Distilled Entry Consistency-Check Mechanism
+  Rationale: "Feature implemented"
+- [close]: domain-20260316-f7b2 → Fix Stale /refine Interface Contract — Codebase and Responsibility Specialist Routing
+  Rationale: "Feature implemented"
+
+---
 
 ## 2026-03-06 — Refine Session
 
@@ -196,6 +239,8 @@
   Rationale: "All 12 entries already carry Status and Priority fields — migration complete."
 - [close]: domain-20260312-c005 → Semantic Duplicate Detection in /refine
   Rationale: "Task implemented"
+- [close]: domain-20260312-c006 → Additional Specialist Subagents in /refine
+  Rationale: "The feature has been implemented"
 
 ---
 
@@ -220,5 +265,49 @@
 ### Governed decisions
 - domain-20260313-c2d4: new_adr_candidate (governance of priority guideline changes) → ADR-016 [RESOLVED] written to decisions.md, option A (full ADR logging)
   Decided by: Søren Lindstrøm | Rationale: "the priorities file controls the general direction that the domain takes. It guides the AI's automated decision and severely impacts priorities."
+
+---
+
+## 2026-03-13 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260313-3c4d, domain-20260313-5e6f, domain-20260313-7a8b → Feature 006 User Stories (US1–US3) appended to requirements.md (requirements specialist)
+- [route_and_summarise]: domain-20260313-9c0d → Feature 006 Edge Cases appended to requirements.md (requirements specialist)
+- [route_and_summarise]: domain-20260313-b1e2 → Feature 006 Functional Requirements FR-001–FR-009 appended to requirements.md (requirements specialist)
+- [route_and_summarise]: domain-20260313-c3f4 → Feature 006 Technical Constraints appended to requirements.md (requirements specialist)
+- [route_and_summarise]: domain-20260313-e7b8 → Feature 006 Success Criteria SC-001–SC-004 appended to requirements.md (requirements specialist)
+- [route_and_summarise]: domain-20260313-1a2b → ADR-017 [RESOLVED] written to decisions.md (decisions specialist)
+- [route_and_summarise]: domain-20260313-f9c0 → Design Assumptions Feature 006 appended to decisions.md (decisions specialist)
+
+### Governed decisions
+- domain-20260313-d5a6: type_ambiguous → routed to codebases.md as data model update; "Refine Pipeline — Type Clusters and Subagents" entry updated to reflect five specialist clusters and context file set table
+  Decided by: user | Rationale: "B" (retype as codebase, route to codebases.md)
+
+---
+
+## 2026-03-16 — Refine Session
+
+### Governed decisions
+- domain-20260316-a8e2 + domain-20260316-c4f1: new_requirement → merged into FR-024 (Distilled Entry Consistency with Implementation) in requirements.md
+  Decided by: Søren Lindstrøm | Rationale: "A" — accept merge of both items into single requirement
+- domain-20260316-c4f1: new_adr_candidate → ADR-016 created [OPEN] — mechanism for keeping distilled entries consistent with implementation changes
+  Decided by: Søren Lindstrøm | Rationale: "Z" — This is just a requirement and the refine-detection is just an idea. The mechanism is deferred to when we add items/tasks to the backlog that addresses this requirement.
+
+---
+
+## 2026-03-16 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260316-9d3a → Validate Feature 005 SC-001–SC-004 with Representative /refine Batch (priority: high) → backlog.md
+- [route_and_summarise]: domain-20260316-c4e1 → Implement FR-024: Distilled Entry Consistency-Check Mechanism (priority: high) → backlog.md
+- [route_and_summarise]: domain-20260316-f7b2 → Fix Stale /refine Interface Contract — Codebase and Responsibility Specialist Routing (priority: high) → backlog.md
+
+---
+
+## 2026-03-16 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260316-a2e7 → Create introduction for new users to get started (priority: medium) → backlog.md
+- [route_and_summarise]: domain-20260316-3f9c → Move subagents to separate files for maintainability (priority: high) → backlog.md
 
 ---

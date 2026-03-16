@@ -46,17 +46,6 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 
 ---
 
-## Additional Specialist Subagents in /refine
-**Type**: task
-**Status**: open
-**Priority**: high
-**Captured**: 2026-03-12
-**Source**: [domain-20260312-c006]
-
-Extend the specialist subagent roster beyond the three mandated by Feature 003 FR-007 (requirements, interfaces, decisions) to cover at least `codebase` and `responsibility` type clusters, which currently fall to the generalist subagent with full context loading. ADR-015 established the type-routing rules that specialist subagents rely on; this task applies that same pattern to the remaining high-volume types. Adding `codebase` and `responsibility` specialists would extend the token-efficiency gains from Feature 003 to a wider share of typical batches, directly improving SC-002 (70%+ autonomy) and SC-005 (no full-distilled-files load unless genuinely necessary).
-
----
-
 ## Distilled File Auto-Splitting
 **Type**: task
 **Status**: open
@@ -101,17 +90,6 @@ Implement an `/onboard` (or `/tour`) command that compiles a structured domain b
 
 ---
 
-## Backlog Activation and Task-Management Query Mode
-**Type**: task
-**Status**: open
-**Priority**: high
-**Captured**: 2026-03-12
-**Source**: [domain-20260312-c00b]
-
-Activate `distilled/backlog.md` as a live, queryable workflow surface by: (1) adding a `task-management` reasoning mode to `/query` (FR-017 currently lists no such mode) that can surface open tasks, filter by linked requirement or domain gap, and report task age; (2) defining lightweight lifecycle operations — a `/triage` skill to promote a backlog task to a requirement (triggering a governed decision per FR-009) or close it with a rationale. The data model and routing exist; the query support and lifecycle commands do not. Without these, `backlog.md` is a write-only log with no retrieval or workflow value.
-
----
-
 ## Multi-AI Host Support
 **Type**: task
 **Status**: open
@@ -123,7 +101,75 @@ Extend the command-file architecture to support AI hosts beyond Claude, realisin
 
 ---
 
+## Validate Feature 005 SC-001–SC-004 with Representative /refine Batch
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-9d3a]
+
+Run a representative /refine batch to validate Feature 005 success criteria: SC-001 (≥80% semantic duplicate suppression before subagent invocation), SC-002 (≥70% autonomous processing rate), SC-003 (zero false positives — no non-duplicate items suppressed), and SC-004 (session latency <60 seconds for a 10-item batch). Results should be recorded to confirm the feature meets its acceptance criteria or surface regressions.
+
+---
+
+
+
+## Create introduction for new users to get started
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-16
+**Source**: domain-20260316-a2e7
+
+Provide an introduction to what domain brain is and how to use it, so that new users can get started.
+
+---
+
+## Move subagents to separate files for maintainability
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: domain-20260316-3f9c
+
+Make subagents explicit — move to separate files — so that they are easier to maintain by hand. This reduces the risk of accidental regressions when editing the refine command and improves the overall maintainability of the refinement pipeline.
+
+---
+
 ## Done
+
+## Fix Stale /refine Interface Contract — Codebase and Responsibility Specialist Routing
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-f7b2]
+
+The /refine Interface Contract in distilled/interfaces.md contains a stale routing table: both `codebase` and `responsibility` item types are listed as routing to the generalist subagent. Following Feature 006, the correct routing is: `codebase` → codebases.md + identity.md (specialist); `responsibility` → responsibilities.md (if present) + identity.md (specialist). Update the interfaces.md routing table to match the implemented Feature 006 behaviour as documented in the codebases.md distilled entry "Refine Pipeline — Type Clusters and Subagents".
+
+---
+
+## Implement FR-024: Distilled Entry Consistency-Check Mechanism
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-c4e1]
+
+Implement FR-024 by resolving ADR-016 and building the chosen distilled-entry consistency-check mechanism. ADR-016 (currently open) proposes three options: A — add a consistency-check phase to /refine; B — a dedicated /consistency-check command; C — a hook/git-diff-based approach. This work item covers both closing the ADR decision and delivering the resulting mechanism. Blocked until ADR-016 is resolved; resolution should be treated as the first sub-step.
+
+---
+
+## Additional Specialist Subagents in /refine
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-c006]
+
+Extend the specialist subagent roster beyond the three mandated by Feature 003 FR-007 (requirements, interfaces, decisions) to cover at least `codebase` and `responsibility` type clusters, which currently fall to the generalist subagent with full context loading. ADR-015 established the type-routing rules that specialist subagents rely on; this task applies that same pattern to the remaining high-volume types. Adding `codebase` and `responsibility` specialists would extend the token-efficiency gains from Feature 003 to a wider share of typical batches, directly improving SC-002 (70%+ autonomy) and SC-005 (no full-distilled-files load unless genuinely necessary).
+
+---
 
 ## Semantic Duplicate Detection in /refine
 **Type**: task
@@ -144,5 +190,16 @@ Upgrade the host pre-filtering stage in `/refine` from byte-for-byte exact match
 **Source**: [domain-20260312-e8f9]
 
 Backfill all 12 existing entries in `distilled/backlog.md` to include the new `Status` and `Priority` fields introduced by Feature 004. Migration is mechanical — no normative judgment required; default priority `medium` for all pre-existing entries. This task directly enables the `/triage` command and `task-management` query mode to function correctly, as both depend on well-formed Status and Priority fields on every backlog entry.
+
+---
+
+## Backlog Activation and Task-Management Query Mode
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-c00b]
+
+Activate `distilled/backlog.md` as a live, queryable workflow surface by: (1) adding a `task-management` reasoning mode to `/query` (FR-017 currently lists no such mode) that can surface open tasks, filter by linked requirement or domain gap, and report task age; (2) defining lightweight lifecycle operations — a `/triage` skill to promote a backlog task to a requirement (triggering a governed decision per FR-009) or close it with a rationale. The data model and routing exist; the query support and lifecycle commands do not. Without these, `backlog.md` is a write-only log with no retrieval or workflow value.
 
 ---

@@ -686,3 +686,175 @@ After a `/refine` session, a domain owner wants to understand what was suppresse
 - **SC-004**: Every `/refine` session output provides a complete account of all suppressed items — exact duplicates, out-of-scope items, and semantic duplicates — so that no item silently disappears from the pipeline.
 
 ---
+
+## Feature 006 — User Stories (US1–US3): Specialist Subagent Extension
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-3c4d, domain-20260313-5e6f, domain-20260313-7a8b]
+
+### US1 — Codebase Items Routed to Focused Specialist (P1)
+A user runs `/refine` with a batch that includes items of type `codebase` — descriptions of repositories, services, or tech stack entries. Instead of falling to the generalist subagent (which loads every distilled file), these items are routed to a dedicated codebase specialist that receives only `codebases.md` and `identity.md`.
+
+**Acceptance scenarios**:
+1. Given a raw item of type `codebase` in the active batch, When `/refine` runs, Then the item is routed to the codebase specialist, not the generalist.
+2. Given the codebase specialist is invoked, When it processes items, Then it receives only `codebases.md` and `identity.md` — no other distilled files.
+3. Given a batch containing only `codebase` items, When `/refine` completes, Then no full-distilled-files load is triggered and SC-005 is satisfied.
+
+### US2 — Responsibility Items Routed to Focused Specialist (P2)
+A user runs `/refine` with items of type `responsibility` — team ownership records, role definitions, or accountability mappings. These are routed to a responsibility specialist that loads only `responsibilities.md` and `identity.md`, rather than the full distilled context.
+
+**Acceptance scenarios**:
+1. Given a raw item of type `responsibility` in the active batch, When `/refine` runs, Then it is routed to the responsibility specialist, not the generalist.
+2. Given the responsibility specialist is invoked, When it processes items, Then it receives only `responsibilities.md` and `identity.md`.
+3. Given a batch where all items are either `codebase` or `responsibility`, When `/refine` completes, Then the generalist subagent is not invoked at all.
+
+### US3 — Mixed Batch Correctly Partitioned Across All Specialists (P2)
+A user runs `/refine` with a real-world mixed batch: some requirements, some interface definitions, some codebase entries, some responsibility records, and a few unrecognised items. The host correctly partitions the batch across five specialists (requirements, interfaces, decisions, codebase, responsibility) and the generalist, merges all results, and presents a single coherent session output.
+
+**Acceptance scenarios**:
+1. Given a mixed batch covering `requirement`, `interface`, `decision`, `codebase`, and `responsibility` types plus one `other` item, When `/refine` runs, Then exactly five specialist invocations and one generalist invocation occur.
+2. Given all specialist invocations complete, When the host merges results, Then the combined session output is a single coherent list of autonomous actions and governed decisions, consistent with the Feature 003 merge format.
+3. Given a `codebase` or `responsibility` item that cannot be confidently acted on autonomously, When the specialist raises a governed decision, Then the governed decision appears in the merged output and is presented to the user for resolution.
+
+---
+
+## Feature 006 — Edge Cases: Specialist Subagent Extension
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-9c0d]
+
+- **Missing context file for new specialist**: If `codebases.md` or `responsibilities.md` does not yet exist in the domain, the specialist is still invoked using only `identity.md`; it MUST NOT fall back to a full-context load.
+- **Responsibility item spanning two distilled files**: The specialist's defined context files govern — the host does not expand the context. Items that are genuinely ambiguous across files can be escalated as governed decisions.
+- **Both `codebase` and `responsibility` items in same batch**: Both specialists are invoked concurrently, following the existing multi-specialist pattern from Feature 003.
+- **All items covered by specialists, no `other` or unrecognised items**: The generalist is not invoked. This is the desired outcome satisfying SC-005.
+- **Governed decision from new specialist conflicts with autonomous action from another specialist**: The merge step concatenates all results; conflict resolution follows the existing governed-decision escalation flow.
+
+---
+
+## Feature 006 — Functional Requirements: Extended Specialist Routing in /refine (FR-001–FR-009)
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-b1e2]
+
+- **FR-001**: The `/refine` host routing table MUST include a `codebase` type cluster with a dedicated specialist subagent.
+- **FR-002**: The `/refine` host routing table MUST include a `responsibility` type cluster with a dedicated specialist subagent.
+- **FR-003**: The codebase specialist MUST receive only `codebases.md` and `identity.md` as distilled context — no other distilled files.
+- **FR-004**: The responsibility specialist MUST receive only `responsibilities.md` (if it exists in the domain) and `identity.md` as distilled context — no other distilled files.
+- **FR-005**: If the designated context file for a new specialist does not exist in the domain, the specialist MUST still be invoked using only `identity.md`, and MUST NOT fall back to a full-context load.
+- **FR-006**: Items of type `stakeholder`, `task`, `mom`, `other`, and any unrecognised types MUST continue to fall back to the generalist subagent as defined in Feature 003 FR-008.
+- **FR-007**: The host MUST continue to merge results from all specialist and generalist invocations into a single coherent session output, consistent with the merge behaviour specified in Feature 003 FR-009.
+- **FR-008**: The session output MUST identify which specialist handled each item (for auditability), consistent with the existing per-cluster tracking.
+- **FR-009**: The updated routing table MUST be documented in `refine.md` and supersede the Feature 003 FR-007 list.
+
+---
+
+## Feature 006 — Technical Constraints: /refine Specialist Extension
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-c3f4]
+
+- **Delivery mechanism**: Changes are implemented as modifications to the `/refine` command file — no standalone application or new command introduced.
+- **Command surface**: Only `/refine` is modified. No changes to `/capture`, `/seed`, or any other command.
+- **Storage format**: Markdown with YAML frontmatter; no schema changes required.
+- **Host AI**: Claude (claude-sonnet-4-6+); new specialists are additional Agent tool invocations following the same pattern as existing specialists.
+
+---
+
+## Feature 006 — Success Criteria (SC-001–SC-004)
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-e7b8]
+
+- **SC-001**: After this feature ships, the generalist subagent receives fewer items in a representative mixed batch — at minimum, `codebase` and `responsibility` items are no longer in its input, reducing generalist input by the proportion those types represent.
+- **SC-002**: At least 70% of raw items across a representative set of `/refine` sessions are processed fully autonomously (no human intervention), meeting the system-wide SC-002 target more consistently than the Feature 003 baseline.
+- **SC-003**: No `/refine` session triggers a full-distilled-files load for `codebase` or `responsibility` items; these types now satisfy SC-005 alongside requirements, interfaces, and decisions.
+- **SC-004**: The governed-decision rate for `codebase` and `responsibility` items drops by at least 20% compared to processing those same items through the generalist, measured over a representative sample.
+
+---
+
+## Distilled Entry Consistency with Implementation (FR-024)
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-a8e2, domain-20260316-c4f1]
+
+**Motivation**: Distilled data accuracy is critical to user trust. If distilled entries describing implementation are stale or incorrect, queries produce misleading answers and users lose confidence in Domain Brain.
+
+**Constraint**: Distilled entries that describe implementation MUST be kept current with the corresponding implementation. When implementation changes, affected distilled entries MUST be updated via the raw queue.
+
+**Mechanism**: To be determined (see ADR-016).
+
+---
+
+## Feature 007 — Fix Stale /refine Interface Contract Routing Table
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-7a2c, domain-20260316-7a3d, domain-20260316-7a4e, domain-20260316-7a5f, domain-20260316-7a6a]
+
+### User Story
+A domain brain maintainer or developer consults the `/refine` Interface Contract to understand how item types are routed during a refine session. They need the routing table to accurately reflect the current system behaviour so they can correctly predict context loading and subagent selection.
+
+**Why this priority**: The interface contract is the single authoritative reference for how `/refine` works. An incorrect routing table misleads developers building on or maintaining the system, and may cause future features to be designed against the wrong baseline.
+
+**Acceptance Scenarios**:
+1. Given the `/refine` Interface Contract routing table, When a developer looks up `codebase`, Then the table shows cluster `codebase` (specialist) and context files `codebases.md, identity.md`.
+2. Given the `/refine` Interface Contract routing table, When a developer looks up `responsibility`, Then the table shows cluster `responsibility` (specialist) and context files `responsibilities.md (if present), identity.md`.
+3. Given the routing table, When compared to the authoritative description in `codebases.md` ("Refine Pipeline — Type Clusters and Subagents"), Then the two are fully consistent with no contradictions.
+
+### Edge Cases
+- If `responsibilities.md` does not exist, the table still reflects the correct cluster assignment; the "(if present)" qualifier on the context file is preserved.
+- Only the two explicitly identified rows (`codebase` and `responsibility`) are in scope for this fix; all other rows remain unchanged.
+
+### Functional Requirements (FR-001–FR-004)
+- **FR-001**: The routing table in the `/refine` Interface Contract MUST list `codebase` as routing to the `codebase` specialist cluster with context files `codebases.md, identity.md`.
+- **FR-002**: The routing table MUST list `responsibility` as routing to the `responsibility` specialist cluster with context files `responsibilities.md (if present), identity.md`.
+- **FR-003**: All other rows in the routing table MUST remain unchanged.
+- **FR-004**: The updated routing table MUST be consistent with the "Refine Pipeline — Type Clusters and Subagents" entry in `distilled/codebases.md`.
+
+### Technical Constraints
+- **Delivery mechanism**: Direct edit to `distilled/interfaces.md` — no command file changes required.
+- **Storage format**: Markdown file in version-controlled repository.
+- **Scope**: Single table edit in one file. No behaviour changes; documentation fix only.
+
+### Success Criteria (SC-001–SC-003)
+- **SC-001**: The routing table in `distilled/interfaces.md` contains zero rows that contradict the routing behaviour documented in `distilled/codebases.md`.
+- **SC-002**: A developer reading both files can confirm `codebase` and `responsibility` routing is identical across both sources in under 30 seconds.
+- **SC-003**: The fix is a single, reviewable edit with no unintended side effects on other table rows or surrounding content.
+
+---
+
+## Feature 008 — Consistency-Check Mechanism
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-8b5a, domain-20260316-8b6b, domain-20260316-8b8d, domain-20260316-8b9e]
+
+### Functional Requirements (FR-001–FR-008)
+- **FR-001**: The consistency-check mechanism MUST identify distilled entries whose source artefacts have changed since the entry was last updated.
+- **FR-002**: The mechanism MUST NOT flag entries whose source artefacts are unchanged (zero false positives on unchanged sources).
+- **FR-003**: The mechanism MUST surface flagged entries with sufficient context for the steward to decide: entry title, source artefact path, and an indication of what changed.
+- **FR-004**: The steward MUST be able to dismiss a flagged entry (mark as reviewed without content change).
+- **FR-005**: The steward MUST be able to initiate re-capture of a flagged entry's content (handoff to `/capture` or direct edit).
+- **FR-006**: The mechanism MUST operate without external services or persistent background processes, consistent with the Extension-First principle.
+- **FR-007**: ADR-018 MUST be resolved before implementation begins. ADR-018 has been resolved as of 2026-03-16 as Option B: standalone `/consistency-check` command. (The Feature 008 spec referred to this as ADR-016; it is recorded as ADR-018 in `distilled/decisions.md`.)
+- **FR-008**: Each consistency-check run MUST append a summary of candidates found and resolutions made to `distilled/changelog.md`.
+
+### Technical Constraints
+- **Delivery mechanism**: Claude command file — no standalone app, no server, no daemon.
+- **Storage format**: Markdown with YAML frontmatter in a version-controlled repository.
+- **External services**: None. Change detection uses only local information (git history or file metadata).
+- **Host AI**: Claude (claude-sonnet-4-6+); built-in tools only.
+- **Invocation model**: Determined by ADR-018 (Option B: standalone `/consistency-check` command).
+
+### Success Criteria (SC-001–SC-005)
+- **SC-001**: A steward can identify all distilled entries affected by a set of source changes in a single consistency-check run — zero manual cross-referencing required.
+- **SC-002**: Zero false positives: entries with unchanged source artefacts are never surfaced as stale candidates.
+- **SC-003**: A steward can complete the full review-and-resolve cycle for a single flagged entry in under 3 minutes.
+- **SC-004**: The mechanism runs fully offline — no network access or external service calls.
+- **SC-005**: ADR-018 is resolved and recorded in `distilled/decisions.md` before any implementation work begins. (Satisfied as of 2026-03-16.)
+
+### Assumptions
+- Distilled entries eligible for consistency-checking carry a `**Source**` field referencing a command file path. Entries without this field are skipped.
+- Change detection uses git commit history or file modification timestamps, as specified by ADR-018 (Option B).
+- The steward's action workflow (re-capture, archive, dismiss) reuses the existing `/capture` and `/refine` pipeline; no new write path is introduced.
+- At any given time, 10–30 distilled entries are expected to have trackable source links — well within the in-context retrieval tier.
+
+---

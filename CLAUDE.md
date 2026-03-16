@@ -9,6 +9,10 @@ Auto-generated from all feature plans. Last updated: 2026-03-05
 - Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep, Agent (004-backlog-lifecycle)
 - Markdown files with YAML frontmatter in git repository (`domain/distilled/backlog.md`, `domain/config/priorities.md`) (004-backlog-lifecycle)
 - Markdown files in git; new optional `config/similarity.md` for threshold config (005-semantic-dedup-refine)
+- Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); Agent tool for subagent invocations (already in use) (006-specialist-subagents)
+- `.claude/commands/refine.md` — the only file modified (006-specialist-subagents)
+- Markdown + YAML (Claude command files) — no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Glob, Grep, Bash (for git log/diff) (008-consistency-check)
+- Markdown files with YAML frontmatter in version-controlled git repository (008-consistency-check)
 
 - Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep, Bash (for git) (001-domain-brain)
 
@@ -28,9 +32,9 @@ tests/
 Markdown + YAML (Claude command files); no programming language required: Follow standard conventions
 
 ## Recent Changes
+- 008-consistency-check: Added Markdown + YAML (Claude command files) — no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Glob, Grep, Bash (for git log/diff)
+- 006-specialist-subagents: Added Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); Agent tool for subagent invocations (already in use)
 - 005-semantic-dedup-refine: Added Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep
-- 004-backlog-lifecycle: Added Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep, Agent
-- 003-refine-perf: Added Markdown + YAML (Claude command files); no programming language + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep, Bash (git)
 
 
 <!-- MANUAL ADDITIONS START -->

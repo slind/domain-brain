@@ -197,7 +197,9 @@ Assign each item to a cluster using this table:
 | `requirement` | requirements | requirements.md, decisions.md, identity.md |
 | `interface` | interfaces | interfaces.md, decisions.md, identity.md |
 | `decision` | decisions | decisions.md, identity.md |
-| `responsibility`, `codebase`, `stakeholder`, `task`, `mom`, `other`, unrecognised | generalist | all distilled files, identity.md |
+| `codebase` | codebase | codebases.md (if present), identity.md |
+| `responsibility` | responsibility | responsibilities.md (if present), identity.md |
+| `stakeholder`, `task`, `mom`, `other`, unrecognised | generalist | all distilled files, identity.md |
 
 For each non-empty cluster, load only the designated context files from
 `<domain-root>/distilled/` (plus `config/identity.md` as always). The generalist cluster's

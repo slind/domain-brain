@@ -6,6 +6,7 @@
 **Type**: interface
 **Captured**: 2026-03-06
 **Source**: domain-20260306-aa1b, domain-20260306-aa2c, domain-20260306-aa3d, domain-20260306-aa4e, domain-20260306-aa5f, domain-20260306-aa6a
+**Describes**: .claude/commands/capture.md
 
 ### Invocation Syntax
 
@@ -113,6 +114,7 @@ Optionally (large document):
 **Type**: interface
 **Captured**: 2026-03-06
 **Source**: domain-20260306-ab1c, domain-20260306-ab2d, domain-20260306-ab3e, domain-20260306-ab4f, domain-20260306-ab5a, domain-20260306-ab6b, domain-20260306-ac1d, domain-20260306-ac2e, domain-20260306-ac3f, domain-20260306-ac4a
+**Describes**: .claude/commands/refine.md
 
 ### Invocation Syntax
 
@@ -154,8 +156,8 @@ The `/refine` host routes each item to a TypeClusterBatch based on its type. Spe
 | `requirement` | requirements | requirements.md, decisions.md, identity.md |
 | `interface` | interfaces | interfaces.md, decisions.md, identity.md |
 | `decision` | decisions | decisions.md, identity.md |
-| `responsibility` | generalist | all distilled files, identity.md |
-| `codebase` | generalist | all distilled files, identity.md |
+| `responsibility` | responsibility | responsibilities.md (if present), identity.md |
+| `codebase` | codebase | codebases.md, identity.md |
 | `stakeholder` | generalist | all distilled files, identity.md |
 | `task` | generalist | all distilled files, identity.md |
 | `mom` | generalist | all distilled files, identity.md |
@@ -302,6 +304,7 @@ Changelog updated with progress so far.
 **Type**: interface
 **Captured**: 2026-03-06
 **Source**: domain-20260306-ad1e, domain-20260306-ad2f, domain-20260306-ad3a, domain-20260306-ad4b
+**Describes**: .claude/commands/query.md
 
 ### Invocation Syntax
 
@@ -398,6 +401,7 @@ Open decision intersects this topic:
 **Type**: interface
 **Captured**: 2026-03-06
 **Source**: domain-20260306-ae1a, domain-20260306-ae2b, domain-20260306-ae3c, domain-20260306-ae4d, domain-20260306-ae5e, domain-20260306-ae6f
+**Describes**: .claude/commands/frame.md
 
 ### Invocation Syntax
 
@@ -472,6 +476,7 @@ Please provide all four sections and try again.
 **Type**: interface
 **Captured**: 2026-03-06
 **Source**: domain-20260306-af1a, domain-20260306-af2b, domain-20260306-af3c, domain-20260306-af4d, domain-20260306-af5e, domain-20260306-af6f, domain-20260306-af7a, domain-20260306-af8b
+**Describes**: .claude/commands/seed.md
 
 ### Invocation Syntax
 
@@ -802,5 +807,164 @@ Validation rules:
 - `was_manual: true` MUST produce ⚠ flag in display
 - Proposed value must differ from current value (no no-op entries)
 - `item_num` references sequential display number from current `/triage` session, not a stored ID
+
+---
+
+## /consistency-check Interface Contract
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: specs/008-consistency-check
+**Describes**: .claude/commands/consistency-check.md
+
+### Invocation Syntax
+
+```
+/consistency-check
+/consistency-check --domain <path>
+```
+
+### Arguments
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--domain` | No | Path to domain brain root; uses default discovery if absent |
+
+### Session Flow
+
+```
+1. LOCATE     Domain brain root (same discovery logic as all other commands)
+2. SCAN       Grep all distilled files for **Describes**: lines → build candidate list
+3. DETECT     For each candidate: git-compare entry captured date vs. source file last-commit date
+4. REPORT     List staleness candidates to steward (oldest-first by captured date)
+5. RESOLVE    For each candidate: present dismiss / re-capture / archive options
+6. RECORD     Append session summary to distilled/changelog.md
+```
+
+### Staleness Detection Logic
+
+For each distilled entry with a `**Describes**: <path>` line:
+
+1. Extract `captured_date` from `**Captured**: YYYY-MM-DD`
+2. Run: `git log --format="%ai" -1 -- <describes_path> | cut -d' ' -f1` → `file_date`
+3. If `file_date` is empty (file untracked or new): skip — not a candidate
+4. If `<describes_path>` not found in working tree: surface as "source deleted"
+5. If `captured_date < file_date`: surface as staleness candidate
+6. Otherwise: skip silently
+
+### Output Formats
+
+**No candidates found**
+```
+Consistency check complete. No stale entries found.
+
+All N tracked entries are current.
+```
+
+**Candidates found**
+```
+Consistency check — N stale entries found:
+
+  [1] /refine Interface Contract   (interfaces.md)
+      Describes: .claude/commands/refine.md
+      Entry captured: 2026-03-06 | File last changed: 2026-03-16 (10 days)
+
+  [2] ...
+
+Review each entry? (yes / skip all / select N,M)
+```
+
+**Per-candidate resolution prompt**
+```
+Entry [1]: /refine Interface Contract
+
+Options:
+  A. Dismiss — not a material change (entry stays, flag cleared)
+  B. Re-capture — I'll update the entry content now
+  C. Archive — entry is no longer relevant (governed: requires rationale)
+
+Your choice:
+```
+
+**Session complete**
+```
+Consistency check complete.
+
+  Reviewed:    2
+  Dismissed:   1
+  Re-captured: 1
+  Archived:    0
+
+Changelog updated: distilled/changelog.md
+```
+
+**Source deleted**
+```
+Warning: 1 entry references a source file that no longer exists:
+  - /refine Interface Contract → .claude/commands/refine.md (not found)
+
+These entries need manual review. Include in session? (yes / skip)
+```
+
+### Governed Action: Archive
+
+Archiving a distilled entry is a destructive governed action requiring explicit rationale:
+
+```
+Decision required: Archive "/refine Interface Contract"
+
+This will remove the entry from interfaces.md. This action is logged and irreversible
+without git revert.
+
+One-line rationale:
+```
+
+No "flag as unresolved" option for archive decisions — the steward must provide a rationale or cancel.
+
+### Changelog Entry Format
+
+Appended to `distilled/changelog.md` at the end of every `/consistency-check` session:
+
+```markdown
+## YYYY-MM-DD — Consistency Check Session
+
+### Candidates Found: N
+- **<Entry Title>** (`<distilled-file>`) — describes `.claude/commands/<file>.md`, last updated YYYY-MM-DD (N days after capture)
+- ...
+
+### Resolutions
+- [reviewed]: <Entry Title> — no material change
+  Rationale: "<steward's words>"
+- [re-captured]: <Entry Title> — content updated
+  Rationale: "<steward's words>"
+- [archived]: <Entry Title> — entry removed
+  Rationale: "<steward's words>"
+
+### Skipped (source deleted)
+- <Entry Title> — `.claude/commands/<file>.md` no longer exists
+
+---
+```
+
+Omit subsections that are empty. If no candidates were found, write:
+
+```markdown
+## YYYY-MM-DD — Consistency Check Session
+
+No stale entries found. All tracked entries are current.
+
+---
+```
+
+**Source**: [domain-20260316-9c5b]
+
+### Files Written
+
+- `distilled/*.md` — modified when entries are re-captured or archived (host only)
+- `distilled/changelog.md` — appended with session summary
+
+### Files Read
+
+- All `distilled/*.md` files — scanned for `**Describes**` lines
+- `config/identity.md` — soft-read for domain name in session header (non-blocking if absent)
 
 ---

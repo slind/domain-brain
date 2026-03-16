@@ -380,7 +380,7 @@ Design assumptions established during the Feature 003 (refine pipeline performan
 | Distilled files in memory during `/refine` | The host already has access to all distilled files in memory during a `/refine` session (per ADR-015); exact-duplicate detection requires no additional I/O. |
 | Definition of "exact duplicate" | Byte-for-byte identical content between the raw item and a distilled entry; semantic similarity detection is out of scope for this feature. |
 | Out-of-scope keyword matching | The Out-of-scope list in `config/identity.md` contains explicit keywords or patterns sufficient for deterministic matching; fuzzy scope detection is out of scope. |
-| Specialist subagent coverage | Three specialist subagents (`requirements`, `interfaces`, `decisions`) cover the majority of high-volume item types; additional specialists can be added in future iterations. |
+| Specialist subagent coverage | Five specialist subagents (`requirements`, `interfaces`, `decisions`, `codebase`, `responsibility`) cover the majority of high-volume item types; Feature 006 extended the original three-specialist roster (Feature 003 FR-007) by adding `codebase` and `responsibility` clusters. Further specialists can be added in future iterations. |
 | Type inference mechanism | Type inference at `/capture` and `/seed` time uses heuristic content analysis; machine-learning-based classification is out of scope. |
 | No retroactive reclassification | Existing `other`-typed items already in the raw queue are not retroactively reclassified; the improvement applies only to newly captured or seeded items. |
 
@@ -442,5 +442,53 @@ Design assumptions and constraints established during the Feature 004 (backlog l
 
 **Decided by**: Søren Lindstrøm | **Date**: 2026-03-13
 **Source items**: [domain-20260313-c2d4]
+
+---
+
+## [RESOLVED] ADR-017: Extend Specialist Subagent Roster to Include Codebase and Responsibility Clusters
+**Status**: Resolved
+**Captured**: 2026-03-13
+**Context**: Feature 003 (FR-007) mandated three specialist subagents (requirements, interfaces, decisions). All other item types — including `codebase` and `responsibility` — fell to a generalist subagent that loads the full distilled context window. As item volumes grew, this created unnecessary overhead: codebase and responsibility items are high-volume and self-contained enough to be handled by focused specialists with scoped context.
+**Options considered**:
+- Keep generalist handling for all non-mandated types (status quo — increasing overhead as volume grows)
+- Add dedicated specialists for codebase and responsibility clusters only, retaining generalist for remaining low-volume types (stakeholder, task, mom, other)
+- Add dedicated specialists for all remaining types immediately
+**Decision**: Add `codebase` and `responsibility` specialist subagents in Feature 006. The generalist subagent is retained as fallback for `stakeholder`, `task`, `mom`, `other`, and unrecognised types.
+**Rationale**: Codebase and responsibility items are sufficiently high-volume and have well-defined context file sets (respective distilled file plus identity.md) to justify dedicated specialists. Stakeholder, task, and mom types do not yet meet that threshold. The Feature 003 specialist instruction template is reused unchanged, keeping the extension low-cost.
+**Decided by**: Søren Lindstrøm | **Date**: 2026-03-13
+**Source items**: [domain-20260313-1a2b]
+
+---
+
+## Design Assumptions — Feature 006 Specification Session
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-f9c0]
+
+Assumptions captured during the Feature 006 specification session for specialist subagent extension:
+
+- The `codebases.md` and `responsibilities.md` distilled files exist (or are empty) in the domain brain; the specialist does not depend on their presence but benefits from it.
+- The context files needed for `codebase` and `responsibility` specialists are primarily the respective distilled file plus `identity.md`. Cross-file lookups (e.g., a codebase entry referencing an interface) are handled by governing decisions rather than expanding context.
+- The Feature 003 specialist instruction template (SUBAGENT INSTRUCTIONS — REFINE AGENT) is reused unchanged for the new specialists; no new instruction variant is required.
+- `stakeholder`, `task`, and `mom` types remain in the generalist cluster for now; their relative volume and decision complexity do not yet justify dedicated specialists.
+- This feature does not retroactively reclassify or reprocess any items already in the raw queue or distilled files.
+
+---
+
+## [RESOLVED] ADR-018: Mechanism for keeping distilled entries consistent with implementation changes
+**Status**: Resolved
+**Captured**: 2026-03-16
+**Context**: FR-024 establishes that distilled entries describing implementation MUST be kept current when the corresponding implementation changes. The specific mechanism for detecting staleness and triggering updates is not yet decided. Candidate approaches surfaced during the refine session that introduced FR-024: (A) a consistency-check phase inside `/refine`; (B) a separate `/consistency-check` command; (C) hook or git-diff-based detection.
+**Options considered**:
+- A: Add a consistency-check phase to `/refine` — at session start, compare distilled entries against their source command files and re-queue stale entries
+- B: Introduce a dedicated `/consistency-check` command — keeps `/refine` lean but requires explicit invocation
+- C: Hook/git-diff-based auto-injection of raw items when source files change (may conflict with no-external-service NFR)
+
+**Decision**: Deliver FR-024 as a new standalone `.claude/commands/consistency-check.md` command (Option B). The command scans all distilled entries with a `**Describes**: <path>` opt-in line, compares each entry's `**Captured**` date against the source file's last git commit date, surfaces stale candidates ranked oldest-first, and guides the steward through dismiss / re-capture / archive resolutions with a changelog entry at session end.
+
+**Rationale**: Option A was rejected because `/refine` is already at a complexity ceiling (579 lines, 13 steps, 5 specialist subagents); adding a consistency-check phase would increase cognitive load and expand the testing surface. Option C was rejected as it requires an external daemon or git hook — both violate the Extension-First principle (Principle I) and the no-external-services constraint. Option B cleanly separates concerns, is pattern-consistent with the simplicity of `/frame` and `/query`, and is estimated at 100–150 lines.
+
+**Decided by**: Søren Lindstrøm | **Date**: 2026-03-16
+**Source items**: [domain-20260316-c4f1]
 
 ---

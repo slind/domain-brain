@@ -239,14 +239,25 @@ A Seed Session is an in-memory record maintained during a single `/seed` invocat
 **Type**: codebase
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-f0a7]
+**Describes**: .claude/commands/refine.md
 
 The refine pipeline routes raw items to specialised processing tracks based on their type. Three concepts support this routing:
 
-**Type cluster**: A named grouping of related item types that maps to a single specialist subagent. The four clusters are: `requirements`, `interfaces`, `decisions`, and `generalist`. Each cluster receives only the distilled context files relevant to its types, keeping the subagent's context window focused.
+**Type cluster**: A named grouping of related item types that maps to a single specialist subagent. Feature 006 extended the roster from three to five specialist clusters: `requirements`, `interfaces`, `decisions`, `codebase`, and `responsibility`. The generalist cluster remains the fallback. Each cluster receives only the distilled context files relevant to its types, keeping the subagent's context window focused.
 
-**Specialist subagent**: A subagent invoked by the refine host with a focused context window scoped to one type cluster (requirements, interfaces, or decisions). It receives only the items and distilled files for its cluster, produces a `SpecialistPlan`, and returns it to the host for merging.
+**Specialist subagent**: An Agent-tool invocation with a focused context window scoped to one type cluster. Receives only the items and distilled files for its cluster, produces a `SpecialistPlan`, and returns it to the host for merging. The new `codebase` and `responsibility` specialists (Feature 006) reuse the same instruction template as the original three specialists from Feature 003.
 
-**Generalist subagent**: The existing single subagent, retained as the fallback cluster. Receives items that are unclassified (type `other`), or whose type does not map to any specialist cluster. Behaves identically to the pre-003 refine subagent with full distilled context.
+**Generalist subagent**: The existing single subagent, retained as the fallback cluster for `stakeholder`, `task`, `mom`, `other`, and unrecognised types. Behaviour is unchanged from Feature 003.
+
+**Context file set**: The specific subset of distilled files passed to a specialist. Defined per cluster in the routing table:
+- `requirements` → requirements.md, decisions.md, identity.md
+- `interfaces` → interfaces.md, decisions.md, identity.md
+- `decisions` → decisions.md, identity.md
+- `codebase` → codebases.md, identity.md
+- `responsibility` → responsibilities.md (if present), identity.md
+- `generalist` → all distilled files, identity.md
+
+**Source**: [domain-20260312-f0a7, domain-20260313-d5a6]
 
 ---
 
@@ -341,6 +352,121 @@ A session-scoped in-memory entity loaded by the `/refine` host in Step 6. Holds 
 **Fallback**: When `source` is `"default"`, the host surfaces the notice: `No similarity config found — using default threshold: moderate.`
 
 **Lifecycle**: Created during `/refine` Step 6 by reading `config/similarity.md`; consumed in Step 6.5c; discarded at session end.
+
+**Persistence**: In-memory only. Not written to any file.
+
+---
+
+## Describes-Link Convention
+**Type**: codebase
+**Captured**: 2026-03-16
+**Source**: specs/008-consistency-check
+
+An opt-in field added to distilled entries to enable automated staleness detection by the `/consistency-check` command. When present, it creates a tracked link from a distilled entry to the source file it documents.
+
+**Format**:
+```markdown
+## <Entry Title>
+**Type**: interface
+**Captured**: YYYY-MM-DD
+**Source**: <raw-item-ids>
+**Describes**: .claude/commands/<command-name>.md
+
+<entry content>
+
+---
+```
+
+**What it signals**: This distilled entry documents the behaviour of the named source file. When the source file changes (as detected by `git log`), the entry may be stale and should be reviewed.
+
+**Format rules**:
+- The path is relative to the repository root.
+- The `**Describes**` line appears in the entry metadata block, after `**Source**` and before the entry body.
+- Only one `**Describes**` line per entry is supported (v1 constraint — one source file per entry).
+- The path should refer to a file that is tracked in git. Untracked files are ignored by the command.
+
+**How `/consistency-check` discovers it**: The command greps all `distilled/*.md` files for the literal string `**Describes**: ` and parses the path that follows. No YAML frontmatter change is required.
+
+**Opt-in, not mandatory**: Entries without a `**Describes**` line are never surfaced as staleness candidates. The convention is applied selectively to entries that document a specific implementation artefact (e.g., a command file's interface contract).
+
+**Source-deleted edge case**: If the file at the `describes_path` no longer exists in the working tree (renamed, deleted, moved), the entry is surfaced as "source deleted" rather than stale — these require manual review to determine whether the entry should be updated, kept, or archived.
+
+---
+
+## Staleness Candidate
+**Type**: codebase
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-9c1d]
+
+A distilled entry identified as potentially stale because its `**Captured**` date predates the last git commit to its source command file. Produced during a `/consistency-check` run; never written to disk as a separate file.
+
+**Staleness condition**: `captured_date < file_last_commit_date` AND `describes_file` is non-null and the file exists in the repo.
+
+**Fields**:
+
+| Field | Type | Source |
+|-------|------|--------|
+| `entry_title` | string | Level-2 heading (`## Title`) of the distilled entry |
+| `entry_file` | string | Path to the distilled file (e.g., `domain/distilled/interfaces.md`) |
+| `captured_date` | YYYY-MM-DD | `**Captured**: YYYY-MM-DD` field in the distilled entry |
+| `describes_file` | string | `**Describes**: <path>` line in the entry content; `null` if absent |
+| `file_last_commit_date` | YYYY-MM-DD | Output of `git log --format="%ai" -1 -- <describes_file>`, date portion |
+| `staleness_days` | integer | `file_last_commit_date - captured_date` in days (approximate, for display) |
+| `status` | enum | `pending` (awaiting review) |
+
+**Not a staleness candidate**:
+- Entry has no `**Describes**` field → skip (not tracked)
+- `describes_file` not found in git history → surface as "source deleted" (distinct case)
+- `captured_date >= file_last_commit_date` → not stale, skip silently
+
+**Persistence**: In-memory only during a `/consistency-check` session. Not written to any file.
+
+---
+
+## Staleness Resolution
+**Type**: codebase
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-9c2e]
+
+The outcome of a steward reviewing a Staleness Candidate. Written to `distilled/changelog.md` at session end. Never a standalone file.
+
+**Fields**:
+
+| Field | Type | Values |
+|-------|------|--------|
+| `entry_title` | string | Title of the reviewed entry |
+| `describes_file` | string | The source file path that triggered the staleness flag |
+| `outcome` | enum | `reviewed` \| `re-captured` \| `archived` |
+| `rationale` | string | Steward's stated reason; `"no rationale provided"` if empty |
+| `resolved_by` | string | Git user name or session identity |
+| `resolved_date` | YYYY-MM-DD | Date of resolution |
+
+**Outcome semantics**:
+- `reviewed` — steward dismissed the change as non-material; distilled entry unchanged
+- `re-captured` — steward updated the entry content to reflect the source change; distilled entry modified
+- `archived` — entry is no longer relevant; removed from distilled file (governed action requiring confirmation)
+
+**Persistence**: Written to `distilled/changelog.md` at session end.
+
+---
+
+## ConsistencyCheckSession
+**Type**: codebase
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-9c3f]
+
+In-memory record maintained during a single `/consistency-check` invocation. Tracks progress and outcome counts for the session summary. Never written to disk; the changelog entry is the durable record.
+
+**Fields**:
+
+| Field | Description |
+|-------|-------------|
+| `candidates_found` | Count of Staleness Candidates identified |
+| `candidates_reviewed` | Count resolved by the steward during this session |
+| `candidates_dismissed` | Count resolved as `reviewed` (non-material) |
+| `candidates_recaptured` | Count resolved as `re-captured` |
+| `candidates_archived` | Count resolved as `archived` |
+| `source_deleted` | Count of entries where `describes_file` was not found in the working tree |
 
 **Persistence**: In-memory only. Not written to any file.
 
