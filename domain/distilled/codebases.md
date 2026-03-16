@@ -253,15 +253,17 @@ The refine pipeline routes raw items to specialised processing tracks based on t
 ## PreFilterResult
 **Type**: codebase
 **Captured**: 2026-03-12
-**Source**: [domain-20260312-e2f9]
+**Source**: [domain-20260312-e2f9, domain-20260313-b002]
 
 An in-memory data structure produced by Step 6.5 of `/refine`. Represents a single raw item that was resolved by the host pre-filter before any subagent was invoked. Never written to disk; recorded only in the session log for the changelog.
 
 **Fields**:
 - `item_id` (string): the raw item id that was pre-filtered
-- `filter_reason` (`"duplicate"` | `"out_of_scope"`): the reason the item was resolved early
-- `matched_term` (string | null): the Out-of-scope term that matched, or `null` for duplicates
-- `matched_file` (string | null): the distilled file where the duplicate body was found, or `null` for out-of-scope matches
+- `filter_reason` (`"duplicate"` | `"out_of_scope"` | `"semantic_duplicate"`): the reason the item was resolved early — `semantic_duplicate` added in Feature 005
+- `matched_file` (string | null): the distilled file where the duplicate body was found, or `null` for out-of-scope and semantic-duplicate matches
+- `matched_term` (string | null): the Out-of-scope term that matched, or `null` for duplicate/semantic-duplicate
+- `matched_entry` (string | null): *(Feature 005)* title or ID of the distilled entry that is the semantic match; `null` for non-semantic-duplicate reasons
+- `similarity_basis` (string | null): *(Feature 005)* brief phrase explaining the semantic overlap; `null` for non-semantic-duplicate reasons
 
 **Persistence**: In-memory only. Not written to any file.
 
@@ -315,6 +317,30 @@ The concatenation of all `SpecialistPlan` instances returned by the specialist s
 - `governed_decisions` (GovernedDecision[]): union of all governed decisions across all specialist plans
 
 **Construction**: The host iterates over all `TypeClusterBatch` invocations, collects each resulting `SpecialistPlan`, and concatenates their action lists. Order of actions within each list is preserved; cluster ordering follows the routing sequence.
+
+**Persistence**: In-memory only. Not written to any file.
+
+---
+
+## SimilarityConfig
+**Type**: codebase
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-b004]
+
+A session-scoped in-memory entity loaded by the `/refine` host in Step 6. Holds the resolved similarity threshold for use in Step 6.5c semantic duplicate detection. Never persisted to disk.
+
+**Fields**:
+- `level` (`"conservative"` | `"moderate"` | `"aggressive"`): the threshold to apply when comparing raw items against distilled entries
+- `source` (`"config/similarity.md"` | `"default"`): indicates whether the threshold was read from the domain config file or fell back to the default
+
+**Threshold semantics**:
+- `conservative` — filter only near-verbatim restatements
+- `moderate` — filter same core fact, different wording (default)
+- `aggressive` — filter same topic, even with peripheral additions
+
+**Fallback**: When `source` is `"default"`, the host surfaces the notice: `No similarity config found — using default threshold: moderate.`
+
+**Lifecycle**: Created during `/refine` Step 6 by reading `config/similarity.md`; consumed in Step 6.5c; discarded at session end.
 
 **Persistence**: In-memory only. Not written to any file.
 

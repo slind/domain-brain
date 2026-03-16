@@ -230,6 +230,15 @@ Appended to `distilled/changelog.md` at end of every session (completed or pause
 ```
 ## <YYYY-MM-DD> -- Refine Session
 
+### Pre-filtered (host)
+- [duplicate]: <item_id> → exact match in <matched_file>
+- [out_of_scope]: <item_id> → matched term "<matched_term>"
+
+### Semantic Duplicates       ← omit entirely if count is zero
+- [semantic_duplicate]: <item_id> → archived
+  Matched: <matched_entry>
+  Basis: <similarity_basis>
+
 ### Autonomous actions
 - [action]: [item-id] -> [description of what was done]
 
@@ -239,6 +248,13 @@ Appended to `distilled/changelog.md` at end of every session (completed or pause
 
 ---
 ```
+
+**Rules for Semantic Duplicates subsection** (Feature 005):
+- MUST be omitted when no semantic duplicates were found. Never write an empty section.
+- When present, appears after `### Pre-filtered (host)` and before `### Autonomous actions`.
+- Each record includes `matched_entry` (the distilled entry matched) and `similarity_basis` (brief phrase explaining the overlap).
+
+**Source**: [domain-20260313-b003]
 
 ### Output Formats
 
@@ -587,6 +603,36 @@ Export the page content to a local file and re-run /seed with the file path.
 ### Files Written
 
 - `raw/<id>.md` -- one per in-scope or ambiguous segment (up to 100 per session)
+
+---
+
+## config/similarity.md — Similarity Configuration
+**Type**: interface
+**Captured**: 2026-03-13
+**Source**: domain-20260313-b001
+
+Per-domain configuration file for semantic duplicate detection in `/refine`. If absent, the host applies the `moderate` default and surfaces a notice in the session output.
+
+**File format** (`domain/config/similarity.md`):
+
+```markdown
+# Similarity Configuration
+
+## Threshold
+
+**Level**: moderate
+
+<!-- Allowed values: conservative | moderate | aggressive
+     conservative — filter only near-verbatim restatements
+     moderate     — filter same core fact, different wording (DEFAULT)
+     aggressive   — filter same topic, even with peripheral additions -->
+```
+
+**Governance**: Non-normative config file. Domain owners may edit it directly without a governed decision. Changes take effect on the next `/refine` invocation.
+
+**Fallback behaviour**: If the file is absent or has an invalid `level` value, the host falls back to `moderate` and surfaces a warning in session output.
+
+**Read by**: `/refine` host in Step 6; result stored in the `SimilarityConfig` in-memory session entity.
 
 ---
 

@@ -46,17 +46,6 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 
 ---
 
-## Semantic Duplicate Detection in /refine
-**Type**: task
-**Status**: open
-**Priority**: high
-**Captured**: 2026-03-12
-**Source**: [domain-20260312-c005]
-
-Upgrade the host pre-filtering stage in `/refine` from byte-for-byte exact match to semantic similarity detection, so that near-duplicate and paraphrased items are eliminated before reaching a subagent rather than consuming a governed decision. Feature 003 Design Assumptions explicitly scope pre-filtering to exact duplicates only, and the Feature 003 Edge Cases entry confirms near-duplicates intentionally pass through to the subagent. Implementing this would push the autonomous processing rate (SC-002: 70%+ target) toward the 90%+ range. Work involves choosing an embedding or similarity strategy compatible with the no-external-service constraint (or relaxing that constraint), defining a configurable similarity threshold, and extending the pre-filtering accounting to record semantic-duplicate outcomes in the session changelog.
-
----
-
 ## Additional Specialist Subagents in /refine
 **Type**: task
 **Status**: open
@@ -135,6 +124,17 @@ Extend the command-file architecture to support AI hosts beyond Claude, realisin
 ---
 
 ## Done
+
+## Semantic Duplicate Detection in /refine
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-c005]
+
+Upgrade the host pre-filtering stage in `/refine` from byte-for-byte exact match to semantic similarity detection, so that near-duplicate and paraphrased items are eliminated before reaching a subagent rather than consuming a governed decision. Feature 003 Design Assumptions explicitly scope pre-filtering to exact duplicates only, and the Feature 003 Edge Cases entry confirms near-duplicates intentionally pass through to the subagent. Implementing this would push the autonomous processing rate (SC-002: 70%+ target) toward the 90%+ range. Work involves choosing an embedding or similarity strategy compatible with the no-external-service constraint (or relaxing that constraint), defining a configurable similarity threshold, and extending the pre-filtering accounting to record semantic-duplicate outcomes in the session changelog.
+
+---
 
 ## Backlog Entry Schema Migration — Existing 12 Entries
 **Type**: task

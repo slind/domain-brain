@@ -194,5 +194,31 @@
 ### Closed
 - [close]: domain-20260312-e8f9 → Backlog Entry Schema Migration — Existing 12 Entries
   Rationale: "All 12 entries already carry Status and Priority fields — migration complete."
+- [close]: domain-20260312-c005 → Semantic Duplicate Detection in /refine
+  Rationale: "Task implemented"
+
+---
+
+## 2026-03-13 — Refine Session
+
+### Semantic Duplicates
+- [semantic_duplicate]: domain-20260313-c001 → archived
+  Matched: Feature 001 — User Stories (US1–US5) — US2 acceptance scenario 1
+  Basis: both describe that /refine archives duplicate items without requiring human input
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260313-a001, a002, a003 → Feature 005 User Stories (US1–US3) → requirements.md
+- [route_and_summarise]: domain-20260313-a004 → Feature 005 Edge Cases → requirements.md
+- [route_and_summarise]: domain-20260313-a005, a006 → Feature 005 Functional Requirements (FR-001–FR-012) → requirements.md
+- [route_and_summarise]: domain-20260313-a007, a008 → Feature 005 Technical Constraints, Key Entities, and Success Criteria → requirements.md
+- [route_and_summarise]: domain-20260313-b001 → config/similarity.md interface contract → interfaces.md
+- [aggregate]: domain-20260313-b002 → extended PreFilterResult with semantic_duplicate fields → codebases.md
+- [aggregate]: domain-20260313-b003 → extended /refine Interface Contract changelog format with Semantic Duplicates subsection → interfaces.md
+- [route_and_summarise]: domain-20260313-b004 → SimilarityConfig entity → codebases.md
+- [route_and_summarise]: domain-20260313-a009 → Design Assumptions Feature 005 session → decisions.md
+
+### Governed decisions
+- domain-20260313-c2d4: new_adr_candidate (governance of priority guideline changes) → ADR-016 [RESOLVED] written to decisions.md, option A (full ADR logging)
+  Decided by: Søren Lindstrøm | Rationale: "the priorities file controls the general direction that the domain takes. It guides the AI's automated decision and severely impacts priorities."
 
 ---

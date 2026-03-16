@@ -386,6 +386,22 @@ Design assumptions established during the Feature 003 (refine pipeline performan
 
 ---
 
+## Design Assumptions — Feature 005 Specification Session (2026-03-13)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-a009]
+
+Design assumptions established during the Feature 005 (semantic duplicate detection in /refine) specification session:
+
+| Assumption | Detail |
+|---|---|
+| Knowledge base size fits in context | The domain's distilled knowledge base is small enough to compare against in a single `/refine` session context without hitting context-length limits (consistent with the ≤500-entry scope boundary from Feature 001; hosted-index tier for larger domains is a separate backlog item). |
+| Similarity comparison mechanism | Semantic similarity comparison is performed by the AI host reasoning in-context (FR-006 resolved: no external embedding APIs). |
+| Definition of "semantic similarity" | Meaning-level overlap sufficient that the incoming item would add no new distilled knowledge — not surface-level word overlap. |
+| Pre-filter accounting | The existing pre-filter accounting structure from Feature 003 (archiving filtered items with a reason) is extended, not replaced. |
+
+---
+
 ## Design Clarifications — Feature 004 Specification Session (2026-03-12)
 **Type**: decision (clarification record, not an ADR)
 **Captured**: 2026-03-12
@@ -406,5 +422,25 @@ Design assumptions and constraints established during the Feature 004 (backlog l
 | Speckit handoff | `/triage` treats the speckit.specify workflow as an available handoff target when starting work on a backlog item. |
 | Priority inference at `/refine` time | Uses the same AI-judgment approach as scope classification — heuristic, not keyword matching — guided by `config/priorities.md`. |
 | Drop vs Close governance | "Drop" (cancel without completion) is a governed decision because it is potentially irreversible and audit-worthy. "Close" (completed) requires only a rationale. |
+
+---
+
+## [RESOLVED] ADR-016: Governance of Priority Guideline Changes
+
+**Status**: Resolved
+**Captured**: 2026-03-13
+**Context**: `config/priorities.md` encodes strategic task prioritisation rules used by the priority subagent and `/refine`. When these rules change, the change has downstream effects on backlog ordering and autonomous decisions made during `/refine`. The question arose whether priority guideline changes should be governed by the ADR process, a lighter changelog, or git history alone.
+
+**Options considered**:
+- A: Log every change to `config/priorities.md` as a new ADR in `distilled/decisions.md`, using the full ADR format with Context, Options, Decision, and Rationale.
+- B: Maintain a lightweight `config/priorities-history.md` changelog (date, summary, rationale) — separate from the ADR log.
+- C: Rely on git history alone for priority guideline provenance.
+
+**Decision**: Log every change to `config/priorities.md` as a new ADR in `distilled/decisions.md` using the full ADR format.
+
+**Rationale**: The priorities file controls the general direction that the domain takes. It guides the AI's automated decisions and severely impacts priorities. Given this strategic weight, changes warrant the full governance treatment afforded to architectural decisions.
+
+**Decided by**: Søren Lindstrøm | **Date**: 2026-03-13
+**Source items**: [domain-20260313-c2d4]
 
 ---

@@ -590,3 +590,99 @@ Anyone can ask natural language questions about backlog state via `/query` and r
 - **SC-007**: All common backlog status queries ("what's open?", "what's in progress?", "what should we work on?") return a cited answer via `/query` without invoking `/triage`.
 
 ---
+
+## Feature 005 — User Stories (US1–US3): Semantic Duplicate Pre-Filtering
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-a001, domain-20260313-a002, domain-20260313-a003]
+
+### US1 — Near-Duplicates Filtered Before Subagent (P1)
+A user runs `/refine` on a raw queue containing items that paraphrase or partially overlap with already-distilled knowledge. The host scores each incoming item against existing distilled entries; items at or above the similarity threshold are identified as semantic duplicates and excluded from the subagent batch automatically — the same way exact duplicates are handled today.
+
+**Acceptance scenarios**:
+1. Given a raw item that is a close paraphrase of an existing distilled entry, when `/refine` runs, then the host identifies it as a semantic duplicate, excludes it from the subagent batch, and records it as `[semantic-duplicate: <matched-entry-id>]` in the session output.
+2. Given a raw item that mentions the same fact as a distilled entry using entirely different words, when `/refine` runs, then the host identifies the semantic overlap and excludes the item before any subagent is invoked.
+3. Given a raw item that is genuinely new knowledge with no significant overlap to any distilled entry, when `/refine` runs, then the item passes through pre-filtering unchanged and reaches the subagent as normal.
+4. Given a raw item that is an exact byte-for-byte duplicate of a distilled entry, when `/refine` runs, then the existing exact-duplicate pre-filter (Feature 003 FR-001) still catches it — no regression.
+
+### US2 — Configurable Similarity Threshold (P2)
+A domain owner wants to tune how aggressively near-duplicates are suppressed. The threshold is stored in the domain's `config/` directory and can be changed without modifying any command file.
+
+**Acceptance scenarios**:
+1. Given a similarity threshold configured in `config/`, when `/refine` runs, then the host uses that threshold for all pre-filter comparisons in the session.
+2. Given no similarity threshold configured, when `/refine` runs, then the host applies a built-in default threshold and notes in session output that the default is in use.
+3. Given a threshold value outside the valid range, when `/refine` runs, then the host rejects the config value, falls back to the default, and warns the user.
+
+### US3 — Semantic Duplicate Outcomes Visible in Changelog (P3)
+After a `/refine` session, a domain owner wants to understand what was suppressed and why. Semantic duplicate outcomes appear in the session changelog, clearly distinguished from other filter reasons, so users can audit the feature's behaviour and spot if the threshold needs adjustment.
+
+**Acceptance scenarios**:
+1. Given one or more semantic duplicates were suppressed in a `/refine` session, when the session completes, then each suppressed item is recorded in the session changelog entry with the matched distilled entry reference.
+2. Given a `/refine` session where no semantic duplicates were found, when the session completes, then the changelog entry does not add a semantic-duplicate section (no empty noise).
+3. Given a session that suppresses both exact duplicates and semantic duplicates, when the changelog is written, then the two categories appear separately and are clearly labelled.
+
+---
+
+## Feature 005 — Edge Cases: Semantic Duplicate Detection in /refine
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-a004]
+
+- **Multiple matches**: If a raw item is semantically similar to two or more distilled entries, the host records the closest match and suppresses the item once; both matched entries may be noted in session output.
+- **Full-batch suppression**: If all items in a batch are identified as semantic duplicates, the session completes immediately with a full suppression summary; no subagent is invoked.
+- **Empty or sparse knowledge base**: If the distilled knowledge base is empty or very sparse, similarity scoring finds no matches and all items pass through to the subagent as normal.
+- **Micro-items**: If an item's content is too short to meaningfully compare, the host skips similarity scoring for that item and passes it through; a minimum-length threshold prevents false positives.
+- **Comparison failure**: If the similarity comparison fails mid-batch, the failing item passes through to the subagent as a safe fallback; the failure is noted in session output but does not abort the session.
+
+---
+
+## Feature 005 — Functional Requirements (FR-001–FR-012): Semantic Pre-Filtering and Threshold Configuration
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-a005, domain-20260313-a006]
+
+### Semantic Pre-Filtering (FR-001–FR-006)
+- **FR-001**: Before invoking any subagent, the `/refine` host MUST compare each raw item against all existing distilled entries for semantic similarity, extending (not replacing) the existing exact-duplicate check from Feature 003 FR-001.
+- **FR-002**: The host MUST apply a configurable similarity threshold when classifying an item as a semantic duplicate; items scoring at or above the threshold MUST be excluded from the subagent batch.
+- **FR-003**: Semantic duplicate items MUST be accounted for in the session output with: (a) the suppressed item's identifier, (b) the matched distilled entry reference, and (c) the basis for the match.
+- **FR-004**: Items scoring below the similarity threshold MUST pass through to the subagent unchanged; the feature MUST NOT increase the false-negative rate for genuinely new knowledge.
+- **FR-005**: The minimum content length for similarity comparison MUST be enforced; items below the minimum length MUST be passed through without similarity scoring.
+- **FR-006**: Similarity comparison MUST be performed solely by the AI host's in-context reasoning; no external embedding APIs or external service calls are permitted. This preserves the no-external-service constraint established in Feature 003 Design Assumptions.
+
+### Threshold Configuration (FR-007–FR-009)
+- **FR-007**: A similarity threshold value MUST be readable from the domain's `config/` directory; the config key and file path MUST be documented in the feature's data model.
+- **FR-008**: When no threshold is configured, the host MUST apply a documented default value and surface a visible notice in the session output.
+- **FR-009**: An invalid or out-of-range threshold value MUST cause the host to fall back to the default and warn the user; it MUST NOT abort the session.
+
+### Changelog Integration (FR-010–FR-012)
+- **FR-010**: Every `/refine` session that suppresses one or more semantic duplicates MUST append a `### Semantic Duplicates` subsection to the session's changelog entry in `distilled/changelog.md`.
+- **FR-011**: Sessions with zero semantic duplicates MUST NOT add a semantic-duplicate section to the changelog entry (no empty sections).
+- **FR-012**: Semantic duplicate records in the changelog MUST be formatted consistently with existing exact-duplicate and out-of-scope records.
+
+---
+
+## Feature 005 — Technical Constraints, Key Entities, and Success Criteria
+**Type**: requirement
+**Captured**: 2026-03-13
+**Source**: [domain-20260313-a007, domain-20260313-a008]
+
+### Technical Constraints
+- **Delivery mechanism**: Enhancement to the existing `/refine` Claude command file — no new command surfaces introduced.
+- **Command surface**: `/refine` (modified); no new skills or commands.
+- **Storage format**: Similarity threshold stored as a config value in a Markdown or YAML file under `domain/config/`; changelog entries in existing `distilled/changelog.md` format.
+- **Host AI**: Claude (claude-sonnet-4-6+); multi-host support deferred per Feature 001 constraints.
+- **Scope boundary**: This feature modifies the host pre-filtering stage only. Subagent logic, governed-decision flow, and distilled-file write operations are unchanged.
+
+### Key Entities
+- **Raw item**: An unprocessed knowledge capture awaiting `/refine`; has an identifier and content body.
+- **Distilled entry**: An existing processed knowledge item in any `distilled/` file; the corpus against which incoming raw items are compared.
+- **Similarity score**: A measure of semantic overlap between a raw item and a distilled entry; compared against the threshold to determine suppression.
+- **Similarity threshold**: A configurable value stored in `domain/config/` that sets the suppression boundary; items at or above this value are treated as semantic duplicates.
+
+### Success Criteria
+- **SC-001**: The proportion of raw items autonomously resolved (without a governed human decision) increases by at least 15 percentage points above the Feature 003 baseline, pushing the overall autonomy rate toward the 90%+ target.
+- **SC-002**: Zero semantic duplicate items reach the subagent when the similarity threshold is correctly configured — confirmed by running a test batch where all near-duplicate items are known in advance.
+- **SC-003**: A domain owner can adjust the similarity threshold and observe a measurable change in suppression behaviour on the next `/refine` run, without modifying any command file.
+- **SC-004**: Every `/refine` session output provides a complete account of all suppressed items — exact duplicates, out-of-scope items, and semantic duplicates — so that no item silently disappears from the pipeline.
+
+---

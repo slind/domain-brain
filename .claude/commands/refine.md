@@ -94,6 +94,16 @@ full content to the generalist subagent as `priority_guidelines`. If it does not
 `priority_guidelines: null`. The subagent uses the guidelines to assign initial priority to
 new task-typed items when routing them to `backlog.md`.
 
+Additionally, attempt to read `<domain-root>/config/similarity.md`. Parse the `**Level**:`
+value from the `## Threshold` section.
+- If found and value is one of `conservative`, `moderate`, or `aggressive`: set
+  `similarity_config = { level: <value>, source: "config/similarity.md" }`.
+- If found but value is not one of the three allowed values: set
+  `similarity_config = { level: "moderate", source: "default" }` and note in session output:
+  `Warning: invalid similarity level in config/similarity.md — using default: moderate.`
+- If not found: set `similarity_config = { level: "moderate", source: "default" }` and note
+  in session output: `No similarity config found — using default threshold: moderate.`
+
 ---
 
 ## Step 6.5 — Pre-filter batch
@@ -133,9 +143,39 @@ the subagent.
 
 If the Out-of-scope list is empty or `config/identity.md` was not found, skip step 6.5b.
 
+### 6.5c — Semantic duplicate detection
+
+For each remaining item in the active batch:
+
+1. **Minimum length check**: Count the words in the item's body text. If the count is fewer
+   than 20 words, skip this item — pass it through without comparison and record no result.
+
+2. **Similarity comparison**: Using the distilled context already loaded in Step 6, reason
+   about whether the item's meaning is substantively already captured in any existing distilled
+   entry. Apply `similarity_config.level` as the confidence bar:
+
+   | Level | Filter when… |
+   |-------|--------------|
+   | `conservative` | The item is a near-verbatim restatement of a distilled entry. Paraphrase with different framing, or the same fact in a different context, passes through. |
+   | `moderate` | The item conveys the same core fact as a distilled entry, even if worded or framed differently. New nuance or additional context passes through. |
+   | `aggressive` | The item addresses the same topic as a distilled entry, even if it adds some peripheral detail. Only genuinely new knowledge (new claims, new entities, new constraints) passes through. |
+
+3. **If a semantic duplicate is identified**:
+   - Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
+   - Record in `pre_filter_results`:
+     `{ item_id, filter_reason: "semantic_duplicate", matched_entry: <title or ID of the matched distilled entry>, similarity_basis: <brief phrase explaining the semantic overlap, e.g. "both describe the retry-on-failure policy"> }`
+   - Remove the item from the active batch.
+
+4. **If no match is found** (or item was below minimum length): leave item in active batch.
+   Do not record a `pre_filter_results` entry for it.
+
+5. **If the comparison is uncertain** (item might partially overlap but is not clearly a
+   duplicate at the current level): leave item in active batch. Do not suppress uncertain items.
+   The subagent handles borderline cases via its existing `merge_duplicate` autonomous action.
+
 ### Empty batch after pre-filtering
 
-If the active batch is empty after both checks:
+If the active batch is empty after all three checks (6.5a, 6.5b, 6.5c):
 1. All items have already had their status set to `refined` (done above).
 2. Skip Steps 7–10.
 3. Proceed directly to Step 11 with the note: "All items were eliminated by host
@@ -457,6 +497,12 @@ Read `<domain-root>/distilled/changelog.md`. Append the following session entry 
 - [out_of_scope]: <item_id> → matched term "<matched_term>"
 ...
 
+### Semantic Duplicates
+- [semantic_duplicate]: <item_id> → archived
+  Matched: <matched_entry>
+  Basis: <similarity_basis>
+...
+
 ### Autonomous actions
 - [<action_type>]: <item_id> → <description>
 - [<action_type>]: <item_id> → <description>
@@ -471,6 +517,9 @@ Read `<domain-root>/distilled/changelog.md`. Append the following session entry 
 ```
 
 If there were no pre-filtered items, omit the `### Pre-filtered (host)` subsection entirely.
+
+If there were no semantic duplicates, omit the `### Semantic Duplicates` subsection entirely —
+do not write an empty section.
 
 If there were no autonomous actions or no governed decisions, omit that subsection header.
 
@@ -490,6 +539,7 @@ Refine session complete.
 Autonomous: <N> items processed
   ✓ Pre-filtered <n> duplicates (host)
   ✓ Pre-filtered <n> out-of-scope (host)
+  ✓ Pre-filtered <n> semantic duplicates (host)
   ✓ Merged <n> duplicates
   ✓ Routed <n> items to distilled files
   ✓ Classified <n> 'other' items
