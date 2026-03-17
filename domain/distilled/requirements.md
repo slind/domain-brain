@@ -858,3 +858,121 @@ A domain brain maintainer or developer consults the `/refine` Interface Contract
 - At any given time, 10–30 distilled entries are expected to have trackable source links — well within the in-context retrieval tier.
 
 ---
+
+## Feature 009 — User Story 1: Detect an Oversized Distilled File (P1)
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-4c5d
+
+A steward running `/refine` encounters a distilled file that has grown beyond the reliable-retrieval threshold. Before processing any raw items, the pre-processing phase detects the oversized file and surfaces a governed decision proposing a split plan. The session pauses until the steward confirms or dismisses.
+
+**Acceptance Scenarios**:
+1. Given a distilled file above threshold, when `/refine` is invoked, then a split proposal is surfaced as a governed decision before any raw items are processed.
+2. Given all distilled files below threshold, when `/refine` is invoked, then no split proposal is surfaced and the session proceeds normally.
+3. Given multiple oversized files, when `/refine` is invoked, then each is surfaced as a separate governed decision, one at a time.
+
+---
+
+## Feature 009 — User Story 2: Confirm and Execute a Split (P2)
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-6e7f
+
+The steward reviews the proposed split (showing which entries go into each sub-file) and confirms. The system creates the sub-files, retires the original, appends a changelog entry, and resumes the raw queue — all within the same invocation.
+
+**Acceptance Scenarios**:
+1. Given a confirmed split proposal, the system creates sub-files with entries distributed as proposed.
+2. The original oversized file is retired (not left as a duplicate alongside sub-files).
+3. A changelog entry is appended recording the split action, source file, and resulting sub-files.
+4. The refine session resumes the raw queue without requiring a new invocation.
+
+---
+
+## Feature 009 — User Story 3: Dismiss or Flag a Split Proposal (P3)
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-8a9b
+
+The steward may dismiss a split proposal (skip for now) or flag it as an unresolved decision. In either case the session continues without splitting and no files are modified. The same file will be flagged again in the next session until the steward acts.
+
+**Acceptance Scenarios**:
+1. Given "skip for now", the session continues and no files are modified.
+2. Given "flag as unresolved" (option Z), an open ADR is created in `decisions.md` and the session continues.
+3. At the next `/refine` invocation the split proposal is surfaced again — dismissal is not permanent.
+
+---
+
+## Feature 009 — Functional Requirements FR-001–FR-010
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-2e3f
+
+- **FR-001**: `/refine` MUST include a pre-processing phase that detects oversized distilled files before processing raw items.
+- **FR-002**: For each oversized file, generate a split proposal grouping by recency (active/recent vs. older/archived) as default axis. Sub-file names follow `{base}-{group-label}-{n}.md`. Proposal MUST include a stated grouping rationale.
+- **FR-003**: Each split proposal MUST be surfaced as a governed decision, one at a time (not batched).
+- **FR-004**: Every split governed decision MUST include "flag as unresolved" as an option, creating an open ADR in `decisions.md`.
+- **FR-005**: The steward MUST be able to accept, dismiss, or redirect (with a different grouping) within the governed decision exchange.
+- **FR-006**: On confirmed split: create sub-files, retire the original, update changelog — then resume the raw item queue.
+- **FR-007**: Executed split MUST be recorded in `distilled/changelog.md` with source file name, resulting sub-file names, entry counts per sub-file, and steward's rationale (or "no rationale provided").
+- **FR-008**: After a confirmed split the refine session MUST resume the remaining raw queue within the same invocation.
+- **FR-009**: The entry-count threshold MUST be configurable; a sensible default MUST apply when no configuration is present.
+- **FR-010**: If a file cannot be meaningfully split (e.g., single entry), surface a warning rather than a split proposal and continue without blocking.
+
+---
+
+## Feature 009 — Sub-file Naming Convention
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-3c4d
+
+Sub-file names MUST follow `{base}-{group-label}-{n}.md`:
+
+| Component | Rule |
+|---|---|
+| `{base}` | Original filename without `.md` (e.g., `requirements`) |
+| `{group-label}` | Derived from grouping label (`active`, `archived`) or steward-provided name |
+| `{n}` | Sequential integer starting at 1; incremented if a file with that name already exists |
+
+Examples: `requirements-active-1.md`, `requirements-archived-1.md`; steward-named groups: `requirements-core-1.md`, `requirements-legacy-1.md`.
+
+---
+
+## Feature 009 — Technical Constraints
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-4a5b
+
+- **Delivery**: Integrated into `/refine` as a pre-processing phase; no separate command.
+- **Command surface**: Extends `.claude/commands/refine.md` only — no new commands or storage formats.
+- **Storage format**: Markdown files with YAML frontmatter; sub-files follow the same naming and header conventions as existing distilled files.
+- **Host AI**: Claude (claude-sonnet-4-6+); built-in tools only (Read, Write, Edit, Glob, Bash for git).
+- **Governed action pattern**: All file writes require steward confirmation. No silent file creation or deletion.
+
+---
+
+## Feature 009 — Edge Cases
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-0c1d
+
+- **Single-entry oversized file**: Split cannot be proposed; system warns the steward that the entry itself may need condensing, not the file split.
+- **Proposed split yields empty sub-file**: System MUST NOT propose splits resulting in empty files; must re-partition until all sub-files have at least one entry.
+- **Steward wants different grouping**: System accepts natural language re-grouping instructions in the governed decision response and revises the proposal.
+- **Multiple oversized files simultaneously**: Each is presented as a separate governed decision, sequentially.
+- **Split sub-file later grows past threshold**: Subject to the same detection on the next refine session.
+- **All entries share the same `Captured` date**: Recency grouping falls back to the `**Type**` field as a secondary axis; steward may override.
+
+---
+
+## Feature 009 — Success Criteria SC-001–SC-005
+**Type**: requirement
+**Captured**: 2026-03-16
+**Source**: domain-20260316-8e9f
+
+- **SC-001**: A steward running `/refine` against an oversized distilled file is shown a split proposal before any raw items are processed — zero sessions where oversized files silently grow further.
+- **SC-002**: The steward can confirm, dismiss, or redirect a split proposal in a single exchange (at most one clarifying follow-up turn per proposal).
+- **SC-003**: After a confirmed split, sub-files together contain exactly the same entries as the original — zero entries lost or duplicated.
+- **SC-004**: Every executed split is recorded in the changelog with source file, sub-file names, and rationale — 100% traceability.
+- **SC-005**: Dismissing a split proposal does not block the refine session — raw item processing continues within the same invocation.
+
+---

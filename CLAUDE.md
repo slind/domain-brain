@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-05
 - `.claude/commands/refine.md` — the only file modified (006-specialist-subagents)
 - Markdown + YAML (Claude command files) — no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Glob, Grep, Bash (for git log/diff) (008-consistency-check)
 - Markdown files with YAML frontmatter in version-controlled git repository (008-consistency-check)
+- Markdown + YAML (Claude command files) — no programming language + Claude (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Bash (for git) (009-distilled-auto-split)
+- Markdown files with YAML frontmatter in git repository; new optional `config/split-thresholds.md` (009-distilled-auto-split)
 
 - Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep, Bash (for git) (001-domain-brain)
 
@@ -32,9 +34,9 @@ tests/
 Markdown + YAML (Claude command files); no programming language required: Follow standard conventions
 
 ## Recent Changes
+- 009-distilled-auto-split: Added Markdown + YAML (Claude command files) — no programming language + Claude (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Bash (for git)
 - 008-consistency-check: Added Markdown + YAML (Claude command files) — no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Glob, Grep, Bash (for git log/diff)
 - 006-specialist-subagents: Added Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); Agent tool for subagent invocations (already in use)
-- 005-semantic-dedup-refine: Added Markdown + YAML (Claude command files); no programming language required + Claude AI (claude-sonnet-4-6+); built-in tools: Read, Write, Edit, Glob, Grep
 
 
 <!-- MANUAL ADDITIONS START -->

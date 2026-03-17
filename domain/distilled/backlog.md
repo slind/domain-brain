@@ -48,7 +48,7 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 
 ## Distilled File Auto-Splitting
 **Type**: task
-**Status**: open
+**Status**: in-progress
 **Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c007]

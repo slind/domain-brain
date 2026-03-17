@@ -311,3 +311,26 @@
 - [route_and_summarise]: domain-20260316-3f9c → Move subagents to separate files for maintainability (priority: high) → backlog.md
 
 ---
+
+## 2026-03-17 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260316-4c5d → Feature 009 User Story 1: Detect an Oversized Distilled File → requirements.md
+- [route_and_summarise]: domain-20260316-6e7f → Feature 009 User Story 2: Confirm and Execute a Split → requirements.md
+- [route_and_summarise]: domain-20260316-8a9b → Feature 009 User Story 3: Dismiss or Flag a Split Proposal → requirements.md
+- [route_and_summarise]: domain-20260316-2e3f → Feature 009 Functional Requirements FR-001–FR-010 → requirements.md
+- [route_and_summarise]: domain-20260316-3c4d → Feature 009 Sub-file Naming Convention → requirements.md
+- [route_and_summarise]: domain-20260316-4a5b → Feature 009 Technical Constraints → requirements.md
+- [route_and_summarise]: domain-20260316-0c1d → Feature 009 Edge Cases → requirements.md
+- [route_and_summarise]: domain-20260316-8e9f → Feature 009 Success Criteria SC-001–SC-005 → requirements.md
+- [route_and_summarise]: domain-20260316-0a1b → Design Assumptions — Feature 009 Specification Session → decisions.md
+- [route_and_summarise]: domain-20260316-2a3b → Design Clarifications — Feature 009 Specification Session → decisions.md
+- [route_and_summarise]: domain-20260316-1a2b → Feature 009 SplitCandidate State Transitions → decisions.md
+- [classify_and_route]: domain-20260316-1c2d → SplitCandidate entity (other→interface) → interfaces.md
+- [classify_and_route]: domain-20260316-3e4f → SplitProposal entity (other→interface) → interfaces.md
+- [classify_and_route]: domain-20260316-5a6b → SubFileSpec entity (other→interface) → interfaces.md
+- [classify_and_route]: domain-20260316-7c8d → SplitResolution entity (other→interface) → interfaces.md
+- [classify_and_route]: domain-20260316-9e0f → ThresholdConfig entity (other→interface) → interfaces.md
+- [archive_only]: domain-20260316-6c7d → high-level summary covered by SplitProposal + ThresholdConfig entities
+
+---

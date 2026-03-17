@@ -492,3 +492,49 @@ Assumptions captured during the Feature 006 specification session for specialist
 **Source items**: [domain-20260316-c4f1]
 
 ---
+
+## Design Assumptions — Feature 009 Specification Session (2026-03-16)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-0a1b]
+
+| Assumption | Detail |
+|---|---|
+| Primary splitting axis | Entry count, not byte size — a more stable and intent-aligned metric for distilled Markdown files. |
+| Default threshold | Approximately 50 entries per file; exact value calibrated during implementation against context-window constraints. |
+| Default grouping axis | Recency — recent/active entries form one sub-file; older/archived entries form another. Steward may override in natural language. |
+| Sub-file naming convention | `{base}-{group-label}-{n}.md` (e.g., `requirements-archived-1.md`); group label derived from dominant entry type or steward-provided name; sequential number disambiguates multiple sub-files sharing a label. |
+| Split detection timing | Runs at the start of `/refine` as a pre-processing phase, not on every file write — real-time monitoring is out of scope. |
+
+---
+
+## Design Clarifications — Feature 009 Specification Session (2026-03-16)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-2a3b]
+
+| Question | Resolution |
+|---|---|
+| Where should split-detection and proposal logic live? | Integrated into `/refine` as a pre-processing phase (Option A) — not a standalone command. |
+| How should sub-files be named when a split is executed? | `{base}-{group-label}-{n}.md`; group label from entry type or steward-provided name; sequential number for disambiguation (e.g., `requirements-archived-1.md`). |
+| What is the default grouping axis when proposing a split? | Recency — recent/active entries in one sub-file, older/archived in another (Option B). |
+
+---
+
+## Design Clarifications — Feature 009 SplitCandidate State Transitions (2026-03-16)
+**Type**: decision (clarification record, not an ADR)
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-1a2b]
+
+SplitCandidate state machine for Feature 009:
+
+```
+SplitCandidate
+  pending → (presented as governed decision)
+    → confirmed          — split executed; sub-files created; original retired; changelog updated
+    → skipped            — no files modified; file flagged again next session
+    → flagged_unresolved — open ADR created in decisions.md; no files modified
+    → warning            — entry_count == 1; no split proposal presented; steward notified
+```
+
+---

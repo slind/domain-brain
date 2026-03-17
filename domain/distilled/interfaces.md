@@ -292,6 +292,53 @@ Session paused. 3 items remain in queue.
 Changelog updated with progress so far.
 ```
 
+### /refine Step 6.2 — Split-Check Phase
+
+**Describes**: `.claude/commands/refine.md`
+
+Runs automatically at the start of every `/refine` session, after distilled files are loaded (Step 6) and before the pre-filter batch (Step 6.5). No flag required to enable or disable; per-file suppression is done via `config/split-thresholds.md`.
+
+**Trigger conditions**: A distilled file's entry count exceeds the configured threshold. Entry count = number of level-2 headings (`## `) in the file that are followed by `**Type**:` metadata (excludes `## Done` in `backlog.md` and file-level h1 headings).
+
+**Threshold config file**: `config/split-thresholds.md` (optional). If absent, default threshold is 50 for all files.
+
+```markdown
+## Default
+
+**Threshold**: 50
+
+## Per-File Overrides
+
+| File | Threshold |
+|------|-----------|
+| domain/distilled/changelog.md | 0 |
+```
+
+Value `0` = never split that file.
+
+**Governed decision options**:
+
+| Option | Action |
+|--------|--------|
+| A | Confirm split as proposed (recency axis — top ⌈N/2⌉ entries → active sub-file, remainder → archived) |
+| B | Skip for now — proposal re-surfaces next session; no file writes; not logged to changelog |
+| C | Custom grouping — steward describes partition in natural language; proposal regenerated and re-presented |
+| Z | Flag as unresolved — open ADR appended to `decisions.md`; session continues |
+
+**Sub-file naming convention**: `{base}-{group-label}-{n}.md` (e.g., `requirements-active-1.md`, `requirements-archived-1.md`). `{n}` increments if the name already exists.
+
+**Original file retirement**: Overwritten with a redirect notice pointing to the two sub-files; retained for git history continuity.
+
+**Changelog entry format** (appended under `### File Splits` in the refine session entry, after `### Autonomous actions`):
+
+```markdown
+### File Splits
+- [split]: <source-file> → <active-sub-file> (N entries), <archived-sub-file> (M entries)
+  Rationale: "<steward's rationale or 'no rationale provided'>"
+```
+
+Omitted entirely if no splits were executed in the session.
+
 ### Files Written
 
 - `distilled/*.md` -- updated with new/merged/deprecated entries (host only, never subagent)
@@ -966,5 +1013,88 @@ No stale entries found. All tracked entries are current.
 
 - All `distilled/*.md` files — scanned for `**Describes**` lines
 - `config/identity.md` — soft-read for domain name in session header (non-blocking if absent)
+
+---
+
+## SplitCandidate — in-memory entity for `/refine` Step 6.2 split-check
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: domain-20260316-1c2d
+
+Ephemeral entity constructed during Step 6.2 of `/refine` for each oversized distilled file. Never written to disk.
+
+| Field | Type | Source |
+|---|---|---|
+| `file_path` | string | Path to the distilled file |
+| `entry_count` | integer | Count of level-2 headings with `**Type**:` metadata |
+| `threshold` | integer | Value from `config/split-thresholds.md` or default (50) |
+| `status` | enum | `pending` → awaiting steward review |
+
+**Eligibility condition**: `entry_count > threshold` AND `entry_count > 1`
+
+---
+
+## SplitProposal — in-memory entity for `/refine` Step 6.2 split-check
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: domain-20260316-3e4f
+
+The system's proposed partition for a SplitCandidate. Ephemeral — exists only during the governed decision exchange; never written to disk.
+
+| Field | Type | Description |
+|---|---|---|
+| `source_file` | string | Path of the oversized file being split |
+| `grouping_axis` | enum | `recency` (default) \| `type` (fallback) \| `steward_directed` |
+| `sub_files` | array of SubFileSpec | Two or more proposed sub-files |
+| `rationale` | string | Human-readable explanation of the proposed grouping |
+
+---
+
+## SubFileSpec — in-memory entity for `/refine` Step 6.2 split-check
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: domain-20260316-5a6b
+
+Ephemeral entity, part of SplitProposal. Never written to disk.
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | string | Proposed file name following `{base}-{group-label}-{n}.md` convention |
+| `path` | string | Full path: `domain/distilled/{name}` |
+| `entries` | array of EntryRef | References to the distilled entries assigned to this sub-file |
+| `entry_count` | integer | Count of entries in this sub-file (must be ≥ 1) |
+| `label` | string | Human-readable group label (e.g., `active`, `archived`) |
+
+---
+
+## SplitResolution — in-memory entity for `/refine` Step 6.2 split-check
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: domain-20260316-7c8d
+
+The outcome of a steward reviewing a SplitCandidate. Written to `distilled/changelog.md` at session end.
+
+| Field | Type | Values |
+|---|---|---|
+| `source_file` | string | Original oversized file path |
+| `outcome` | enum | `confirmed` \| `skipped` \| `flagged_unresolved` |
+| `sub_files_created` | array of string | Names of sub-files created (empty if outcome ≠ `confirmed`) |
+| `entry_counts` | map string→integer | Entry count per sub-file created |
+| `rationale` | string | Steward's stated reason; `"no rationale provided"` if empty |
+| `resolved_date` | YYYY-MM-DD | Date of resolution |
+
+---
+
+## ThresholdConfig — persistent config entity for `/refine` Step 6.2 split-check
+**Type**: interface
+**Captured**: 2026-03-16
+**Source**: domain-20260316-9e0f
+
+Stored in `config/split-thresholds.md`. Read at the start of Step 6.2.
+
+| Field | Type | Description |
+|---|---|---|
+| `default_threshold` | integer | Entry count above which any file is considered oversized. Default: 50 if file absent. |
+| `per_file_overrides` | map string→integer | File-path-keyed threshold overrides. Value `0` means "never split this file". |
 
 ---
