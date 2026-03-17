@@ -285,6 +285,17 @@
 
 ---
 
+## 2026-03-17 — Refine Session
+
+### File Splits
+- [split]: requirements.md → requirements-active-1.md (27 entries), requirements-archived-1.md (26 entries)
+  Rationale: "File has grown too large"
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260317-a1b2 → Command Namespace Prefix for Domain Brain Extensions (priority: medium) → backlog.md
+
+---
+
 ## 2026-03-16 — Refine Session
 
 ### Governed decisions
@@ -332,5 +343,47 @@
 - [classify_and_route]: domain-20260316-7c8d → SplitResolution entity (other→interface) → interfaces.md
 - [classify_and_route]: domain-20260316-9e0f → ThresholdConfig entity (other→interface) → interfaces.md
 - [archive_only]: domain-20260316-6c7d → high-level summary covered by SplitProposal + ThresholdConfig entities
+
+---
+
+## 2026-03-17 — Triage Session
+
+### Closed
+- [close]: domain-20260312-c007 → Distilled File Auto-Splitting
+  Rationale: "feature implemented"
+- [close]: domain-20260316-9d3a → Validate Feature 005 SC-001–SC-004 with Representative /refine Batch
+  Rationale: "Verification complete and passed"
+
+---
+
+## 2026-03-17 — Refine Session (Feature 005 Validation Batch)
+
+### Semantic Duplicates
+- [semantic_duplicate]: domain-20260317-ff01 → archived
+  Matched: [RESOLVED] ADR-001: Delivery Mechanism
+  Basis: both describe the no-runtime, command-files-only delivery approach for Domain Brain
+- [semantic_duplicate]: domain-20260317-ff02 → archived
+  Matched: [RESOLVED] ADR-007: Raw Item Filename Convention
+  Basis: both describe the `<domain>-<YYYYMMDD>-<4hex>.md` filename pattern with id-match property
+- [semantic_duplicate]: domain-20260317-ff03 → archived
+  Matched: Feature 001 SC-002 in requirements.md
+  Basis: both state the 70% autonomous processing rate target for /refine
+- [semantic_duplicate]: domain-20260317-ff04 → archived
+  Matched: /refine Interface Contract §Pause and Resume in interfaces.md
+  Basis: both describe stop/pause halting the session with queue intact and partial changelog written
+- [semantic_duplicate]: domain-20260317-ff05 → archived
+  Matched: [RESOLVED] ADR-003: Retrieval Strategy by Domain Size
+  Basis: both describe the ≤50/51-500/>500 tiered retrieval strategy for /query
+- [semantic_duplicate]: domain-20260317-ff06 → archived
+  Matched: /seed Interface Contract §Session Cap in interfaces.md
+  Basis: both describe the 100-item cap with out-of-scope exclusion and --limit N override
+- [semantic_duplicate]: domain-20260317-ff07 → archived
+  Matched: /refine Interface Contract §Governed Decision Presentation in interfaces.md
+  Basis: both describe one-at-a-time lettered-option governed decisions with natural language acceptance
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260317-ff08 → new requirement appended to requirements.md ([TEST-V005] Dry-run mode for refine command)
+- [route_and_summarise]: domain-20260317-ff09 → new task appended to backlog.md ([TEST-V005] Implement /diff command for changelog comparison, priority: medium)
+- [aggregate]: domain-20260317-ff0a → --format json section appended to /query Interface Contract in interfaces.md
 
 ---

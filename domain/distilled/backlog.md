@@ -46,17 +46,6 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 
 ---
 
-## Distilled File Auto-Splitting
-**Type**: task
-**Status**: in-progress
-**Priority**: high
-**Captured**: 2026-03-12
-**Source**: [domain-20260312-c007]
-
-Implement the distilled file auto-splitting mechanism specified in Feature 001 Edge Cases: when a distilled file grows too large for reliable retrieval, the system automatically proposes a split into sub-files as a governed action requiring user confirmation before committing the restructuring. The edge case is fully specified in requirements but not implemented in any command file. Work involves defining a size/entry-count threshold for each distilled file type, implementing split-proposal logic in `/refine` or as a standalone maintenance command, and ensuring the governed-action pattern (one decision at a time, changelog entry, "flag as unresolved" option) is respected per FR-009 through FR-015.
-
----
-
 ## Knowledge Staleness Detection
 **Type**: task
 **Status**: open
@@ -101,18 +90,6 @@ Extend the command-file architecture to support AI hosts beyond Claude, realisin
 
 ---
 
-## Validate Feature 005 SC-001–SC-004 with Representative /refine Batch
-**Type**: task
-**Status**: open
-**Priority**: high
-**Captured**: 2026-03-16
-**Source**: [domain-20260316-9d3a]
-
-Run a representative /refine batch to validate Feature 005 success criteria: SC-001 (≥80% semantic duplicate suppression before subagent invocation), SC-002 (≥70% autonomous processing rate), SC-003 (zero false positives — no non-duplicate items suppressed), and SC-004 (session latency <60 seconds for a 10-item batch). Results should be recorded to confirm the feature meets its acceptance criteria or surface regressions.
-
----
-
-
 
 ## Create introduction for new users to get started
 **Type**: task
@@ -136,7 +113,40 @@ Make subagents explicit — move to separate files — so that they are easier t
 
 ---
 
+## Command Namespace Prefix for Domain Brain Extensions
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-17
+**Source**: domain-20260317-a1b2
+
+Commands, skills, and agents from this application should be prefixed with a namespace that clearly identifies them as part of this extension, so that users do not intermix them with commands from other installed extensions.
+
+---
+
 ## Done
+
+## Validate Feature 005 SC-001–SC-004 with Representative /refine Batch
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: [domain-20260316-9d3a]
+
+Run a representative /refine batch to validate Feature 005 success criteria: SC-001 (≥80% semantic duplicate suppression before subagent invocation), SC-002 (≥70% autonomous processing rate), SC-003 (zero false positives — no non-duplicate items suppressed), and SC-004 (session latency <60 seconds for a 10-item batch). Results should be recorded to confirm the feature meets its acceptance criteria or surface regressions.
+
+---
+
+## Distilled File Auto-Splitting
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-12
+**Source**: [domain-20260312-c007]
+
+Implement the distilled file auto-splitting mechanism specified in Feature 001 Edge Cases: when a distilled file grows too large for reliable retrieval, the system automatically proposes a split into sub-files as a governed action requiring user confirmation before committing the restructuring. The edge case is fully specified in requirements but not implemented in any command file. Work involves defining a size/entry-count threshold for each distilled file type, implementing split-proposal logic in `/refine` or as a standalone maintenance command, and ensuring the governed-action pattern (one decision at a time, changelog entry, "flag as unresolved" option) is respected per FR-009 through FR-015.
+
+---
 
 ## Fix Stale /refine Interface Contract — Codebase and Responsibility Specialist Routing
 **Type**: task
