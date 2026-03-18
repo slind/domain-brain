@@ -538,3 +538,30 @@ SplitCandidate
 ```
 
 ---
+
+## Design Assumptions — Feature 001 Specification Session (Explicit Subagents)
+**Type**: decision
+**Captured**: 2026-03-18
+**Source**: domain-20260318-9e0f
+
+- The Claude Agent tool supports passing instruction content loaded from a file at invocation time; no platform constraint prevents this.
+- The single `### SUBAGENT INSTRUCTIONS — REFINE AGENT` block is the complete set of inline subagent instructions to extract; no other embedded subagent blocks exist in the current `refine.md`.
+- Specialist cluster routing (requirements, interfaces, decisions, codebase, responsibility) all use the same shared instruction block — a single subagent file is sufficient for this feature. Splitting by specialist type is out of scope.
+- No other command files currently embed subagent instructions that need to be extracted as part of this feature.
+
+---
+
+## Design Clarifications — Feature 001 Specification Session (Explicit Subagents)
+**Type**: decision
+**Captured**: 2026-03-18
+**Source**: domain-20260318-a1b2
+
+**Clarifications (2026-03-17)**:
+- Q: Where should subagent files be stored? → A: `.claude/agents/` to maintain conventions
+- Q: What format should the subagent file header take? → A: Plain Markdown prose header (no YAML frontmatter)
+
+**Scope Boundary Decisions**:
+- **In scope**: Extracting the refine subagent instructions to a separate file; updating `refine.md` to load and reference it.
+- **Out of scope**: Creating separate instruction files per specialist type (future feature); extracting instruction blocks from commands other than `/refine`; changing the content of the subagent instructions beyond what is necessary for the extraction.
+
+---

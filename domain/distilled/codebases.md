@@ -471,3 +471,84 @@ In-memory record maintained during a single `/consistency-check` invocation. Tra
 **Persistence**: In-memory only. Not written to any file.
 
 ---
+
+## Explicit Subagents — Key Entities
+**Type**: codebase
+**Captured**: 2026-03-18
+**Source**: domain-20260318-7a8b
+
+Two entities govern the refine pipeline after the explicit-subagents restructure:
+
+- **Host command** (`refine.md`): Orchestrates the full refine pipeline — loads context, pre-filters, routes, invokes subagents, executes plans, writes files. References subagent instruction files rather than embedding their content inline.
+- **Subagent instruction file** (e.g., `.claude/agents/refine-subagent.md`): Contains the static instruction text for the refine subagent — output format contract, action types, governed decision triggers, and ADR format. Stored in `.claude/agents/`. Read by the host at session start and passed to the Agent tool as part of the invocation payload.
+
+---
+
+## Explicit Subagents — .claude/ Directory Structure
+**Type**: codebase
+**Captured**: 2026-03-18
+**Source**: domain-20260318-b3c4
+
+The explicit-subagents feature introduces a structural split with no new data entities. One block of content is extracted from `refine.md` into a dedicated agents directory.
+
+**Before**:
+```
+.claude/
+└── commands/
+    └── refine.md          # 724 lines — host pipeline AND subagent instructions combined
+```
+
+**After**:
+```
+.claude/
+├── commands/
+│   └── refine.md          # ~550 lines — host pipeline only; references subagent file
+└── agents/
+    └── refine-subagent.md # ~175 lines — SUBAGENT INSTRUCTIONS block only
+```
+
+Convention: `.claude/agents/` holds static subagent instruction files. `.claude/commands/` holds host pipeline commands that orchestrate subagents.
+
+---
+
+## refine.md — Explicit Subagents Modifications
+**Type**: codebase
+**Captured**: 2026-03-18
+**Source**: domain-20260318-c5d6
+
+Changes to the host command `refine.md` under feature 001-explicit-subagents:
+
+- **Step 3**: Gains one Read call for `.claude/agents/refine-subagent.md` to load subagent instructions at session start.
+- **Step 7**: Replaces the inline instruction block reference with the loaded file contents.
+- **Removed**: The `### SUBAGENT INSTRUCTIONS — REFINE AGENT` section is removed from `refine.md`.
+
+**Error handling**: If the Read call for the subagent file fails or returns empty, the command outputs:
+```
+Error: Subagent instruction file not found: .claude/agents/refine-subagent.md
+Ensure the file exists before running /refine.
+```
+Processing stops immediately; no items are processed.
+
+---
+
+## refine-subagent.md — Subagent Instruction File
+**Type**: codebase
+**Captured**: 2026-03-18
+**Source**: domain-20260318-d7e8
+
+The refine subagent instruction file located at `.claude/agents/refine-subagent.md`.
+
+**Format**: Plain Markdown — no YAML frontmatter.
+
+**Required opening header** (FR-006):
+```markdown
+# Refine Subagent
+
+**Invoked by**: `/refine` (Step 7 — specialist subagent invocation)
+**Processes**: All item types — requirements, interfaces, decisions, codebase, responsibility, and generalist cluster items
+**Output contract**: REFINE_PLAN with AUTONOMOUS_ACTIONS and GOVERNED_DECISIONS sections (JSON-like structure)
+```
+
+**Body**: Verbatim copy of the `### SUBAGENT INSTRUCTIONS — REFINE AGENT` block previously embedded in `refine.md`, beginning at "You are a refine subagent…".
+
+---

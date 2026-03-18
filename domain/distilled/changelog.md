@@ -2,6 +2,31 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-18 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260318-1a2b → requirements-active-1.md (Feature 001 explicit-subagents US1)
+- [route_and_summarise]: domain-20260318-2c3d → requirements-active-1.md (Feature 001 explicit-subagents US2)
+- [route_and_summarise]: domain-20260318-3e4f → requirements-active-1.md (Feature 001 explicit-subagents US3)
+- [route_and_summarise]: domain-20260318-3f7c → requirements-active-1.md (Domain Brain Must Be Installable in Any Project)
+- [route_and_summarise]: domain-20260318-4a5b → requirements-active-1.md (Feature 001 explicit-subagents edge cases)
+- [route_and_summarise]: domain-20260318-5c6d → requirements-active-1.md (Feature 001 explicit-subagents FR-001–FR-006)
+- [route_and_summarise]: domain-20260318-6e7f → requirements-active-1.md (Feature 001 explicit-subagents technical constraints)
+- [route_and_summarise]: domain-20260318-8c9d → requirements-active-1.md (Feature 001 explicit-subagents SC-001–SC-004)
+- [route_and_summarise]: domain-20260318-e9fa → requirements-active-1.md (Feature 001 explicit-subagents data model invariants)
+- [route_and_summarise]: domain-20260318-7a8b → codebases.md (Explicit Subagents — Key Entities)
+- [route_and_summarise]: domain-20260318-b3c4 → codebases.md (Explicit Subagents — .claude/ Directory Structure)
+- [route_and_summarise]: domain-20260318-c5d6 → codebases.md (refine.md explicit subagents modifications)
+- [route_and_summarise]: domain-20260318-d7e8 → codebases.md (refine-subagent.md subagent instruction file)
+- [route_and_summarise]: domain-20260318-9e0f → decisions.md (Design Assumptions — Feature 001 Explicit Subagents)
+- [route_and_summarise]: domain-20260318-a1b2 → decisions.md (Design Clarifications — Feature 001 Explicit Subagents)
+
+### Governed decisions
+- domain-20260318-a4f2: Multi-AI support — normative MUST vs. product direction → captured as product direction (option B); v1 Claude-first deferral preserved
+  Decided by: Søren Lindstrøm | Rationale: "B"
+
+---
+
 ## 2026-03-16 — Refine Session
 
 ### Semantic Duplicates

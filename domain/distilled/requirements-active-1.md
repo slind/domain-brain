@@ -496,3 +496,126 @@ Examples: `requirements-active-1.md`, `requirements-archived-1.md`; steward-name
 - **SC-005**: Dismissing a split proposal does not block the refine session — raw item processing continues within the same invocation.
 
 ---
+
+## Feature 001 (explicit-subagents) — User Story 1: Edit Subagent Instructions Without Touching the Refine Command
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-1a2b
+
+A maintainer wants to tune the subagent's classification rules or update the output format contract without navigating the full 700-line refine command. With subagent instructions extracted to their own file, they can open, edit, and review just the subagent content — no risk of inadvertently modifying the host command's step logic.
+
+**Why this priority**: The entire refine pipeline is currently a single monolithic file; any edit requires the maintainer to navigate the full file, increasing the risk of accidental side-effects. Separating subagent instructions is the direct fix.
+
+**Acceptance Scenarios**:
+1. Given the subagent instructions are in a separate file, When a maintainer edits only that file to add a new autonomous action type, Then the next `/refine` session uses the updated instructions with no changes to the host command file.
+2. Given the subagent instructions are in a separate file, When a maintainer opens `refine.md` to adjust the step 6.5 pre-filtering logic, Then the subagent instructions file is not opened or modified.
+
+---
+
+## Feature 001 (explicit-subagents) — User Story 2: Subagent Files Are Discoverable and Self-Describing
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-2c3d
+
+A maintainer new to the codebase wants to understand which subagents the refine pipeline uses and what each one does. Separate subagent files should be named and located so their purpose is immediately clear without requiring the maintainer to read the full host command.
+
+**Why this priority**: Discoverability compounds the value of separation. A file named `refine-subagent.md` in a predictable location communicates its purpose at a glance; a buried section heading inside a 700-line file does not.
+
+**Acceptance Scenarios**:
+1. Given the refine pipeline is in place, When a maintainer lists the command files, Then the subagent file(s) are visible and their names describe their role (e.g., `refine-subagent.md`).
+2. Given a subagent file exists, When a maintainer reads it, Then its header or opening paragraph identifies which command invokes it and what its output contract is.
+
+---
+
+## Feature 001 (explicit-subagents) — User Story 3: Host Command References Subagent File, Not Inline Block
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-3e4f
+
+When `/refine` invokes a specialist subagent via the Agent tool, it loads the subagent's instructions from the dedicated file rather than embedding them inline. This keeps the host command lean and ensures a single source of truth for subagent behaviour.
+
+**Acceptance Scenarios**:
+1. Given the refine command has been updated, When a maintainer reads `refine.md`, Then no inline subagent instructions section is present.
+2. Given the refine command invokes a subagent, When the session runs, Then the subagent receives the same instructions it received when they were inline — behaviour is unchanged.
+3. Given the subagent file is missing or unreadable at session start, When `/refine` is invoked, Then the command surfaces an error identifying the missing file before attempting any processing.
+
+---
+
+## Domain Brain Must Be Installable in Any Project
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-3f7c
+
+It must be possible to install Domain Brain in any project as an AI extension (similar to speckit), to keep track of a defined domain of knowledge. The system's portability is a first-class product requirement — not a consequence of how it happens to be built.
+
+---
+
+## Feature 001 (explicit-subagents) — Edge Cases
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-4a5b
+
+- **Accidentally deleted subagent file**: The host command must detect the missing file at start-up and report an actionable error rather than invoking the Agent tool with empty instructions.
+- **Both files modified in same change**: Changes to host command and subagent file are independent; no coupling or merge logic is required.
+- **Multiple specialist subagent types introduced in future**: The file structure accommodates additional subagent files without requiring changes to the naming convention.
+- **Subagent file contains host-injected context (e.g., `priority_guidelines`)**: Separation must preserve the host's responsibility for assembling the full Agent tool invocation payload; the subagent file contains only the static instruction text.
+
+---
+
+## Feature 001 (explicit-subagents) — Functional Requirements (FR-001–FR-006)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-5c6d
+
+- **FR-001**: The `### SUBAGENT INSTRUCTIONS — REFINE AGENT` block currently embedded in `refine.md` MUST be extracted to one or more dedicated subagent instruction files.
+- **FR-002**: Each subagent instruction file MUST be stored in `.claude/agents/` — a dedicated directory separate from host commands in `.claude/commands/`.
+- **FR-003**: The `/refine` host command MUST load the subagent instruction file(s) at session start and use their contents when invoking the Agent tool — no inline instruction text remains in `refine.md`.
+- **FR-004**: If a required subagent instruction file is absent or unreadable, the host command MUST stop and output an error message that identifies the missing file by path before any processing begins.
+- **FR-005**: The `/refine` command's observable behaviour — types processed, output format, governed decision flow, changelog entries — MUST be identical before and after this change.
+- **FR-006**: Each subagent instruction file MUST open with a plain Markdown prose header (no YAML frontmatter) identifying: the command that invokes it, the types of items it processes, and the output contract it must satisfy.
+
+---
+
+## Feature 001 (explicit-subagents) — Technical Constraints
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-6e7f
+
+- **Delivery mechanism**: Claude command file modification — no new programming language or runtime required.
+- **Command surface**: `/refine` is the only command affected; no new commands or skills are exposed.
+- **Storage format**: Markdown files; host commands in `.claude/commands/`, subagent instruction files in `.claude/agents/`.
+- **Host AI**: Claude (claude-sonnet-4-6+); the Agent tool is used to invoke subagents and is the mechanism for passing instruction content.
+
+---
+
+## Feature 001 (explicit-subagents) — Success Criteria (SC-001–SC-004)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-8c9d
+
+- **SC-001**: After the change, `refine.md` contains no inline subagent instructions section — a search of the file for the `SUBAGENT INSTRUCTIONS` heading returns no matches.
+- **SC-002**: A `/refine` session run against a representative batch produces the same autonomous actions, governed decision prompts, and changelog output as the pre-change baseline — zero behavioural regressions.
+- **SC-003**: All subagent instruction files are locatable by listing `.claude/agents/` — a maintainer can find every subagent file without reading `refine.md`.
+- **SC-004**: Editing the subagent instruction file and running `/refine` uses the updated instructions without any modification to `refine.md`.
+
+---
+
+## Domain Brain — Multi-AI Support (Product Direction)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-a4f2
+
+The product direction is that Domain Brain should support AI assistants beyond Claude, including self-hosted AIs such as Ollama and Qwen. This is a stated product direction and near-term goal — not yet a hard MUST constraint on any current feature. Multi-assistant support remains deferred to a future feature iteration, to be specified when implementation options are understood.
+
+---
+
+## Feature 001 (explicit-subagents) — Data Model Invariants
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-e9fa
+
+- The content of the subagent instructions MUST be byte-for-byte identical to the current inline block (no rewording, no additions) — this feature is a structural refactor only.
+- The `.claude/agents/` directory MUST exist before `/refine` is invoked.
+- No other files are created or modified by this feature.
+
+---

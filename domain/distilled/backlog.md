@@ -102,16 +102,6 @@ Provide an introduction to what domain brain is and how to use it, so that new u
 
 ---
 
-## Move subagents to separate files for maintainability
-**Type**: task
-**Status**: open
-**Priority**: high
-**Captured**: 2026-03-16
-**Source**: domain-20260316-3f9c
-
-Make subagents explicit — move to separate files — so that they are easier to maintain by hand. This reduces the risk of accidental regressions when editing the refine command and improves the overall maintainability of the refinement pipeline.
-
----
 
 ## Command Namespace Prefix for Domain Brain Extensions
 **Type**: task
@@ -125,6 +115,19 @@ Commands, skills, and agents from this application should be prefixed with a nam
 ---
 
 ## Done
+
+## Move subagents to separate files for maintainability
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: domain-20260316-3f9c
+
+Make subagents explicit — move to separate files — so that they are easier to maintain by hand. This reduces the risk of accidental regressions when editing the refine command and improves the overall maintainability of the refinement pipeline.
+
+Rationale: Implemented in feature 001-explicit-subagents. Subagent instructions extracted to `.claude/agents/refine-subagent.md`; `refine.md` updated to load and reference the file.
+
+---
 
 ## Validate Feature 005 SC-001–SC-004 with Representative /refine Batch
 **Type**: task
