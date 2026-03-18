@@ -859,9 +859,11 @@ Validation rules:
 
 ## /consistency-check Interface Contract
 **Type**: interface
-**Captured**: 2026-03-16
-**Source**: specs/008-consistency-check
+**Captured**: 2026-03-18
+**Source**: specs/008-consistency-check, specs/010-onboard-tour
 **Describes**: .claude/commands/consistency-check.md
+
+Runs two checks in sequence: (1) staleness scan — surfaces distilled entries whose source command files have been modified since the entry was captured; (2) README refresh — regenerates `domain/README.md` from the current state of the domain brain.
 
 ### Invocation Syntax
 
@@ -884,7 +886,8 @@ Validation rules:
 3. DETECT     For each candidate: git-compare entry captured date vs. source file last-commit date
 4. REPORT     List staleness candidates to steward (oldest-first by captured date)
 5. RESOLVE    For each candidate: present dismiss / re-capture / archive options
-6. RECORD     Append session summary to distilled/changelog.md
+6. README     Auto-refresh domain/README.md from identity, interfaces, and backlog (non-blocking)
+7. RECORD     Append session summary to distilled/changelog.md
 ```
 
 ### Staleness Detection Logic
@@ -941,6 +944,8 @@ Consistency check complete.
   Re-captured: 1
   Archived:    0
 
+  README:      domain/README.md updated
+
 Changelog updated: distilled/changelog.md
 ```
 
@@ -989,30 +994,39 @@ Appended to `distilled/changelog.md` at the end of every `/consistency-check` se
 ### Skipped (source deleted)
 - <Entry Title> — `.claude/commands/<file>.md` no longer exists
 
+### README
+- [readme]: domain/README.md → <created|updated|skipped> (N interfaces, M priorities)
+
 ---
 ```
 
-Omit subsections that are empty. If no candidates were found, write:
+Omit subsections that are empty (except `### README` — always included). If no candidates were found:
 
 ```markdown
 ## YYYY-MM-DD — Consistency Check Session
 
 No stale entries found. All tracked entries are current.
 
+### README
+- [readme]: domain/README.md → <created|updated|skipped> (N interfaces, M priorities)
+
 ---
 ```
 
-**Source**: [domain-20260316-9c5b]
+**Source**: [domain-20260316-9c5b, specs/010-onboard-tour]
 
 ### Files Written
 
 - `distilled/*.md` — modified when entries are re-captured or archived (host only)
 - `distilled/changelog.md` — appended with session summary
+- `domain/README.md` — created or overwritten on every successful run (skipped if `config/identity.md` absent)
 
 ### Files Read
 
 - All `distilled/*.md` files — scanned for `**Describes**` lines
-- `config/identity.md` — soft-read for domain name in session header (non-blocking if absent)
+- `config/identity.md` — required for README refresh; soft-read for domain name in header
+- `distilled/interfaces.md` — read for README Exposed Interfaces section
+- `distilled/backlog.md` — read for README Top Priorities section
 
 ---
 
@@ -1096,5 +1110,18 @@ Stored in `config/split-thresholds.md`. Read at the start of Step 6.2.
 |---|---|---|
 | `default_threshold` | integer | Entry count above which any file is considered oversized. Default: 50 if file absent. |
 | `per_file_overrides` | map string→integer | File-path-keyed threshold overrides. Value `0` means "never split this file". |
+
+---
+
+## /consolidate — Merged into /consistency-check
+**Type**: interface
+**Captured**: 2026-03-18
+**Source**: specs/010-onboard-tour
+
+> **Merged 2026-03-18**: The `/consolidate` command has been absorbed into `/consistency-check` as Step 6 (README refresh). There is no standalone `/consolidate` command. Run `/consistency-check` to both scan for staleness and regenerate `domain/README.md`.
+
+The README refresh logic (load identity → load interfaces → load backlog → compose → overwrite `domain/README.md`) runs automatically after the staleness resolution loop on every `/consistency-check` invocation. It is non-blocking: if `config/identity.md` is absent the step is skipped with a warning.
+
+See the `/consistency-check` Interface Contract above for the full session flow, output formats, and changelog format.
 
 ---
