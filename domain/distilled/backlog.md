@@ -49,7 +49,7 @@ Connect `/seed` to CI/CD and repository events so seeding happens automatically 
 ## Knowledge Staleness Detection
 **Type**: task
 **Status**: open
-**Priority**: medium
+**Priority**: high
 **Captured**: 2026-03-12
 **Source**: [domain-20260312-c008]
 
@@ -68,14 +68,14 @@ Add a sixth reasoning mode to `/query` — `trend-analysis` or `changelog-query`
 
 ---
 
-## Onboarding Briefing Command (/onboard or /tour)
+## Onboarding and Introduction for New Users
 **Type**: task
 **Status**: open
-**Priority**: medium
-**Captured**: 2026-03-12
-**Source**: [domain-20260312-c00a]
+**Priority**: high
+**Captured**: 2026-03-16
+**Source**: domain-20260312-c00a, domain-20260316-a2e7
 
-Implement an `/onboard` (or `/tour`) command that compiles a structured domain briefing for new team members in a single invocation: domain one-liner and pitch from `config/identity.md`, all active responsibilities, all [OPEN] ADRs from `decisions.md`, all active interface contracts, and key stakeholders. SC-008 requires that a new team member can correctly identify domain ownership, active interfaces, and unresolved decisions using queries alone — but this only works if they know which queries to ask. Work involves defining the briefing structure and retrieval scope, implementing selective loading of only the relevant distilled files, and formatting the output for a first-time reader.
+Implement `/onboard` (or `/tour`) — a command and/or document serving two overlapping needs: (1) a general introduction explaining what Domain Brain is and how to use it (the /frame → /capture → /refine → /query workflow), so first-time users can get started independently; (2) a structured domain briefing for new team members joining an existing domain, compiling the domain one-liner and pitch from `config/identity.md`, all active responsibilities, all [OPEN] ADRs from `decisions.md`, all active interface contracts, and key stakeholders in a single invocation. SC-008 requires that a new team member can correctly identify domain ownership, active interfaces, and unresolved decisions using queries alone — but this only works if they know which queries to ask. Work involves defining the briefing structure, implementing selective loading of only the relevant distilled files, and formatting output for a first-time reader.
 
 ---
 
@@ -91,17 +91,6 @@ Extend the command-file architecture to support AI hosts beyond Claude, realisin
 ---
 
 
-## Create introduction for new users to get started
-**Type**: task
-**Status**: open
-**Priority**: medium
-**Captured**: 2026-03-16
-**Source**: domain-20260316-a2e7
-
-Provide an introduction to what domain brain is and how to use it, so that new users can get started.
-
----
-
 
 ## Command Namespace Prefix for Domain Brain Extensions
 **Type**: task
@@ -111,6 +100,72 @@ Provide an introduction to what domain brain is and how to use it, so that new u
 **Source**: domain-20260317-a1b2
 
 Commands, skills, and agents from this application should be prefixed with a namespace that clearly identifies them as part of this extension, so that users do not intermix them with commands from other installed extensions.
+
+---
+
+## Domain Brain Installation and Initialization Mechanism
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap1
+
+Define and implement a mechanism for installing Domain Brain into any project. Requirement domain-20260318-3f7c ("Domain Brain Must Be Installable in Any Project") has no corresponding implementation task. Without this, adoption is blocked at step zero — users must manually copy files and set up the directory structure. Work involves defining a scaffolding command (e.g., `/db:init`) or documented setup procedure that creates the `domain/`, `.claude/agents/`, `.claude/commands/` layout with starter config files in an arbitrary project.
+
+---
+
+## Split Refine Subagent by Specialist Type
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap2
+
+Feature 001 Design Clarifications explicitly deferred "creating separate instruction files per specialist type — future feature." Currently a single `refine-subagent.md` covers all 5 specialist clusters (requirements, interfaces, decisions, codebase, responsibility). As the system grows, editing one cluster's behaviour risks unintended regressions in others. Work involves creating `requirements-subagent.md`, `interfaces-subagent.md`, `decisions-subagent.md`, `codebase-subagent.md`, `responsibility-subagent.md` in `.claude/agents/`, and updating `refine.md` to load the appropriate file per cluster.
+
+---
+
+## Bootstrap responsibilities.md and Validate Responsibility Routing
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap3
+
+The `responsibility` specialist subagent (ADR-017, Feature 006) routes items to `responsibilities.md`, but this file does not exist in `domain/distilled/`. The specialist will operate with no context file, reducing routing quality. Work involves: (1) creating `domain/distilled/responsibilities.md` with the standard distilled file schema; (2) running a `/refine` batch to populate it from any existing responsibility-type raw items; (3) validating routing by querying `/query` for responsibility-related questions.
+
+---
+
+## Opportunistic Capture Prompts in /query Responses
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap4
+
+The domain identity pitch states Domain Brain "captures domain knowledge wherever it is observed," but capture is currently 100% manual. When `/query` produces a partial or insufficient answer (Step 8 — retrieval insufficiency), it identifies a specific knowledge gap but does not offer to capture it. Work involves extending `/query` Step 8 and Step 9 to generate a pre-filled `/capture` invocation suggestion (with inferred type and title) whenever the answer is partial or insufficient, making the system actively help close its own knowledge gaps.
+
+---
+
+## Author Domain Brain Design Constitution
+**Type**: task
+**Status**: open
+**Priority**: medium
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap5
+
+The domain brain's core design principles (Extension-First, Knowledge as Code, Governed Quality Gate, etc.) are referenced throughout ADR-001 through ADR-018 but never consolidated in a single normative document. Without a constitution, future command changes lack a normative anchor. Work involves running `/speckit.constitution` to produce a `CONSTITUTION.md` encoding the Extension-First principle, Knowledge as Code principle, Governed Quality Gate pattern, and the command design values referenced across the ADR log. The result should be seeded back into the domain brain via `/seed`.
+
+---
+
+## Domain Knowledge Export / Stakeholder Report Command
+**Type**: task
+**Status**: open
+**Priority**: low
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap6
+
+Currently the only way to share domain knowledge externally is to share raw Markdown files. There is no `/export` or report-generation command that produces a formatted, human-readable summary for stakeholders who do not interact with the AI. Work involves implementing a `/export` or `/report` command that compiles a structured read-only brief — domain one-liner and pitch, responsibilities, open ADRs, active interface contracts, and key stakeholders — into a single sharable Markdown or HTML document.
 
 ---
 
