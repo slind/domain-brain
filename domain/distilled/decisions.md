@@ -565,3 +565,21 @@ SplitCandidate
 - **Out of scope**: Creating separate instruction files per specialist type (future feature); extracting instruction blocks from commands other than `/refine`; changing the content of the subagent instructions beyond what is necessary for the extraction.
 
 ---
+
+## [RESOLVED] ADR-019: Consolidate Command Merged into Consistency-Check
+**Status**: Resolved
+**Captured**: 2026-03-18
+**Context**: Feature 010 originally planned a standalone `/consolidate` command to generate `domain/README.md` as an onboarding artefact. During implementation it became clear that README generation was closely coupled to the consistency-checking workflow, which already inspects every distilled file and the command registry. Keeping a separate command would have duplicated that traversal and introduced a second entry point that users must remember to run.
+
+**Options considered**:
+- Keep `/consolidate` as a standalone command with its own `.claude/commands/consolidate.md` file
+- Merge README generation into `/consistency-check` as an additional step executed during each consistency run
+
+**Decision**: Merge the consolidate logic into `/consistency-check` as Step 6 (README refresh). No standalone `consolidate.md` command file is created.
+
+**Rationale**: The consistency-check command already traverses all distilled files and the command registry; appending a README-generation step reuses that traversal at zero extra cost. A single command is simpler for users and eliminates the risk of `domain/README.md` going stale between separate command invocations. The `interfaces.md` entry for `/consolidate` was replaced with a merge notice pointing to `/consistency-check`, and the corresponding backlog item was closed as done.
+
+**Decided by**: Søren Lindstrøm | **Date**: 2026-03-18
+**Source items**: [domain-20260318-a4c7]
+
+---

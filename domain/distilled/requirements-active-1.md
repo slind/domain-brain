@@ -619,3 +619,115 @@ The product direction is that Domain Brain should support AI assistants beyond C
 - No other files are created or modified by this feature.
 
 ---
+
+## Feature 010 — User Stories (US1–US3)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: [domain-20260318-b2c3, domain-20260318-c4d5, domain-20260318-d6e7]
+
+> **Command note**: These stories were written against a standalone `/consolidate` command. That command was subsequently merged into `/consistency-check` as Step 6 (README refresh). All `/consolidate` references below apply to `/consistency-check` Step 6.
+
+### US1 — Steward Generates Domain README (P1)
+The steward runs `/consistency-check` for the first time in a domain brain project. A human-readable `domain/README.md` is created containing: the domain one-liner and pitch, the interfaces the domain exposes, a brief guide to using the domain brain, and the current top open priorities from the backlog. Stakeholders and new contributors can read a single document to understand the domain — no AI interaction required.
+
+**Why**: Without this, distilled knowledge is only accessible through AI queries. This makes the knowledge base legible to anyone with repository access.
+
+**Acceptance scenarios**:
+1. Given `domain/README.md` does not exist, When the steward runs `/consistency-check`, Then the file is created with four labelled sections.
+2. Given `config/identity.md` exists, When the command runs, Then the Domain Summary section reflects the current identity file content verbatim.
+3. Given a changelog entry for the run is expected, When the command completes, Then an entry is appended to `distilled/changelog.md`.
+
+### US2 — New Team Member Reads the README (P2)
+A new developer clones the repository and opens `domain/README.md` in their git browser. Without running any command or interacting with AI, they can read the domain's purpose, see which interfaces exist, understand how to query the domain brain, and identify what the team is currently working on.
+
+**Acceptance scenarios**:
+1. Given a generated `domain/README.md`, When a reader opens it in a git browser, Then all content is readable as standard Markdown.
+2. Given the domain has open high-priority backlog items, When a reader reads the Top Priorities section, Then they see item titles and a one-line description ordered high → medium.
+3. Given the domain has active interface contracts, When a reader reads the Exposed Interfaces section, Then they see each interface contract title listed.
+
+### US3 — README Stays Current After Domain Changes (P3)
+After the team closes several backlog items and adds a new interface contract, the steward runs `/consistency-check` again. The existing `domain/README.md` is updated — new priorities surface, the new interface appears, and outdated content is replaced.
+
+**Why**: A stale README is worse than no README. Ensuring the command overwrites rather than appends is essential for the document's trust.
+
+**Acceptance scenarios**:
+1. Given `domain/README.md` already exists, When the steward runs `/consistency-check`, Then the existing file is fully overwritten (not appended to).
+2. Given a backlog item was closed, When the command runs again, Then the closed item does not appear in Top Priorities.
+3. Given a new interface contract was added, When the command runs again, Then the new interface appears in Exposed Interfaces.
+
+---
+
+## Feature 010 — Edge Cases (README Generation)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-e8f9
+
+> **Command note**: Written against `/consolidate`; now applies to `/consistency-check` Step 6.
+
+- `config/identity.md` absent → Step 6 MUST error: "Domain identity not found. Run /frame first." README is not created or modified.
+- `distilled/interfaces.md` absent → Exposed Interfaces section displays "No interfaces defined yet." No error.
+- `distilled/backlog.md` has no open items → Top Priorities section displays "No open items." No error.
+- Backlog has only low-priority items → Include the top 5 open items regardless of priority level.
+- More than 5 high-priority items → Show the top 5 by priority tier and append "… and N more open items — run /query for the full list."
+- `distilled/changelog.md` absent → Step 6 creates it before appending the session entry.
+
+---
+
+## Feature 010 — Functional Requirements (FR-001–FR-010)
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-fa0b
+
+> **Command note**: Written against `/consolidate`; now applies to `/consistency-check` Step 6.
+
+- **FR-001**: Step 6 MUST create `domain/README.md` if it does not exist.
+- **FR-002**: Step 6 MUST fully overwrite `domain/README.md` if it already exists — never append.
+- **FR-003**: README MUST include a **Domain Summary** section containing the domain one-liner, pitch, and steward name sourced from `config/identity.md`.
+- **FR-004**: README MUST include an **Exposed Interfaces** section listing all interface contract titles from `distilled/interfaces.md`. If absent or empty: "No interfaces defined yet."
+- **FR-005**: README MUST include an **Intended Usage** section describing the primary commands — as static prose.
+- **FR-006**: README MUST include a **Top Priorities** section listing up to 5 open backlog items, ordered high → medium → low. Each item MUST show its title and a one-line description. If no open items: "No open items."
+- **FR-007**: README MUST be valid, human-readable Markdown renderable in standard git hosting interfaces.
+- **FR-008**: Step 6 MUST append an entry to `distilled/changelog.md` at the end of each run.
+- **FR-009**: If `config/identity.md` does not exist, Step 6 MUST stop with "Domain identity not found. Run /frame first." and MUST NOT create or modify `domain/README.md`.
+- **FR-010**: README MUST include a footer line indicating when it was last generated.
+
+---
+
+## Feature 010 — Technical Constraints
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: domain-20260318-0c1d
+
+> **Command note**: Written against a standalone `/consolidate` command; now applies to `/consistency-check` Step 6. There is no separate `.claude/commands/consolidate.md` file.
+
+- **Delivery mechanism**: Step 6 of `.claude/commands/consistency-check.md` — no standalone application, no external services.
+- **Command surface**: `/consistency-check` (existing command, Step 6); no new commands added.
+- **Output file**: `domain/README.md` — a standard Markdown file in the domain root directory.
+- **Host AI**: Claude (claude-sonnet-4-6+); no dependencies beyond built-in Read, Write, Glob tools.
+- **Context loading**: Reads only `config/identity.md`, `distilled/interfaces.md`, `distilled/backlog.md`. MUST NOT load changelog, raw items, decisions, or requirements files.
+
+---
+
+## Feature 010 — Success Criteria and Assumptions
+**Type**: requirement
+**Captured**: 2026-03-18
+**Source**: [domain-20260318-2e3f, domain-20260318-4a5b]
+
+> **Command note**: Written against `/consolidate`; now applies to `/consistency-check` Step 6.
+
+### Success Criteria (SC-001–SC-005)
+- **SC-001**: A person who has never interacted with the domain brain can correctly identify the domain's purpose, at least one exposed interface, and the team's current top priority by reading `domain/README.md` alone — zero AI interaction required.
+- **SC-002**: Step 6 completes and produces a complete, valid README in a single invocation with no follow-up prompts.
+- **SC-003**: After running `/consistency-check` a second time following any change to backlog or interfaces, the README accurately reflects the current state — zero stale content.
+- **SC-004**: The generated README renders without broken formatting in at least two standard git hosting interfaces (GitHub-style Markdown).
+- **SC-005**: The Top Priorities section always reflects the current open backlog state — no closed or dropped items appear after a run.
+
+### Assumptions
+- The output file path is always `domain/README.md` (relative to the domain brain root).
+- The Intended Usage section is static prose describing the primary commands; it does not vary by domain and does not require reading from any file.
+- `/consistency-check` is invoked manually by the steward — there is no automatic trigger from other commands. Automation is deferred.
+- The "top 5 priorities" cap is fixed (not configurable in v1).
+- Interface contracts are listed by title only in the README — no body content included.
+- The command does not validate the content of `config/identity.md` beyond confirming the file exists.
+
+---

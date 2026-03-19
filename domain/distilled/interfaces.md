@@ -1125,3 +1125,80 @@ The README refresh logic (load identity → load interfaces → load backlog →
 See the `/consistency-check` Interface Contract above for the full session flow, output formats, and changelog format.
 
 ---
+
+## DomainReadme — Output Document Entity
+**Type**: interface
+**Captured**: 2026-03-18
+**Source**: domain-20260318-6c7d
+
+The output document written to `domain/README.md` by `/consistency-check`. A pure Markdown file with no YAML frontmatter, designed for human readability in git browsers.
+
+**Structure**: Domain Name, one-liner, steward, last-generated date, domain summary pitch, exposed interface titles, intended usage prose, and up to 5 top-priority backlog items.
+
+**Field sources**:
+
+| README field | Source |
+|---|---|
+| Domain Name | `config/identity.md` frontmatter `domain` field |
+| One-liner | `config/identity.md` body `**One-line**:` field |
+| Steward | `config/identity.md` frontmatter `steward` field |
+| Last generated | Current UTC date (injected by command at runtime) |
+| Pitch | `config/identity.md` body `**Pitch**:` field |
+| Interface titles | All `## ` headings in `distilled/interfaces.md` |
+| Intended Usage | Static prose embedded in command |
+| Top Priorities | Up to 5 open items from `distilled/backlog.md`, ordered high → medium → low |
+
+---
+
+## ConsolidateSession — In-Memory Session Entity
+**Type**: interface
+**Captured**: 2026-03-18
+**Source**: domain-20260318-8e9f
+
+In-memory record maintained during a single `/consistency-check` README refresh invocation. Never written to disk; the changelog entry is the durable record.
+
+| Field | Type | Description |
+|---|---|---|
+| `run_date` | string (YYYY-MM-DD) | Date of the run |
+| `domain_root` | string | Resolved path to the domain brain root |
+| `readme_path` | string | Absolute path to `domain/README.md` |
+| `identity_found` | boolean | Whether `config/identity.md` was found and read |
+| `interfaces_count` | integer | Number of interface entries included in the README |
+| `priorities_count` | integer | Number of backlog items included in the README |
+| `readme_existed` | boolean | Whether `domain/README.md` existed before this run |
+| `action` | enum: `created` \| `updated` | Whether the README was created or overwritten |
+
+---
+
+## BacklogItem — Read-Only View for Top Priorities
+**Type**: interface
+**Captured**: 2026-03-18
+**Source**: domain-20260318-0a1b
+
+A distilled entry from `distilled/backlog.md` used to populate the Top Priorities section of `domain/README.md`. Read-only — `/consistency-check` never modifies the backlog.
+
+| Field | Source in backlog.md |
+|---|---|
+| `title` | `## <Title>` heading |
+| `priority` | `**Priority**:` field (`high` \| `medium` \| `low`) |
+| `status` | `**Status**:` field |
+| `description` | First sentence of entry body (truncated at 120 chars if needed) |
+
+**Selection logic**: Include items where `status` is `open` or `in-progress`. Exclude `done` items. Sort: `high` first, then `in-progress` (any priority), then `medium`, then `low`. Cap at 5 total.
+
+---
+
+## InterfaceEntry — Read-Only View for Exposed Interfaces
+**Type**: interface
+**Captured**: 2026-03-18
+**Source**: domain-20260318-2c3d
+
+An entry from `distilled/interfaces.md` used to populate the Exposed Interfaces section of `domain/README.md`. Read-only — `/consistency-check` never modifies the interfaces file.
+
+| Field | Source |
+|---|---|
+| `title` | `## <Title>` heading from `distilled/interfaces.md` |
+
+All `## ` headings in `distilled/interfaces.md` are included. No filtering applied.
+
+---

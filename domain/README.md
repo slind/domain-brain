@@ -1,97 +1,63 @@
-# Domain Brain — Instance Template
+# domain — Domain Brain README
 
-This directory is a template for a single domain brain instance. Copy and rename it for
-your team's domain, then use the `/capture`, `/refine`, and `/query` Claude commands to
-manage your domain knowledge.
+> An AI extension that turns implicit domain knowledge into a queryable, governed knowledge base.
 
-## Initialization
+**Steward**: Søren Lindstrøm
+**Last generated**: 2026-03-19 by `/consistency-check`
 
-1. **Copy this directory** and rename it for your domain:
+---
 
-   ```bash
-   cp -r domain/ my-payments-domain/
-   ```
+## Domain Summary
 
-2. **For single-domain repos** (name it `domain/`): the commands find it automatically.
+Domain Brain is a software product enabling your favorite AI to assist in collecting, culling and reasoning about a specific domain. It captures domain knowledge wherever it is observed. It organizes and distills the captured information through a governed quality gate. And uses the distilled information to serve grounded, relevant context to the AI in order to answer questions and reason about the domain in a qualified manner.
 
-   **For multi-domain repos**: create a `.domain-brain-root` file at the git root:
+---
 
-   ```bash
-   echo "my-payments-domain/" > .domain-brain-root
-   ```
+## Exposed Interfaces
 
-3. **Frame the domain identity** (required before seeding, recommended before capturing):
+- /capture Interface Contract
+- /refine Interface Contract
+- /query Interface Contract
+- /frame Interface Contract
+- /seed Interface Contract
+- config/similarity.md — Similarity Configuration
+- /triage — Backlog Lifecycle Data Model
+- /consistency-check Interface Contract
+- /consolidate — Merged into /consistency-check
+- SplitCandidate — in-memory entity for `/refine` Step 6.2 split-check
+- SplitProposal — in-memory entity for `/refine` Step 6.2 split-check
+- SubFileSpec — in-memory entity for `/refine` Step 6.2 split-check
+- SplitResolution — in-memory entity for `/refine` Step 6.2 split-check
+- ThresholdConfig — persistent config entity for `/refine` Step 6.2 split-check
+- DomainReadme — Output Document Entity
+- ConsolidateSession — In-Memory Session Entity
+- BacklogItem — Read-Only View for Top Priorities
+- InterfaceEntry — Read-Only View for Exposed Interfaces
 
-   ```
-   /frame
-   ```
+---
 
-   This creates `config/identity.md` — a one-line headline, a 3–5 sentence pitch, and explicit
-   in-scope / out-of-scope lists. The identity is used by `/seed` to filter relevance, by
-   `/refine` to archive off-domain items, and by `/query` to orient answers for new readers.
+## Intended Usage
 
-4. **Seed existing knowledge** (optional): Import existing docs, runbooks, or web pages:
+Domain Brain is a structured knowledge companion for software teams. It captures, refines, and surfaces domain knowledge so that every decision, requirement, and interface is traceable and queryable.
 
-   ```
-   /seed docs/payments-runbook.md
-   /seed docs/payments/
-   ```
+Use `/frame` to define or update the domain identity — the one-line description, pitch, and scope boundaries that give the system its focus.
 
-   Requires `config/identity.md` to exist (run `/frame` first).
+Use `/capture` or `/seed` to bring knowledge into the system. `/capture` takes a single item in natural language; `/seed` imports from an existing document, URL, or directory.
 
-5. **Customize types** (optional): Edit `config/types.yaml` to add domain-specific capture
-   types. Changes take effect immediately — no restart needed.
+Use `/refine` to process the raw queue — the refine agent deduplicates, classifies, and routes each item into the appropriate distilled knowledge file, surfacing governed decisions one at a time.
 
-6. **Capture your first item**:
+Use `/query` to ask questions about the domain. The query agent classifies your question, retrieves only relevant distilled entries, and grounds every answer in the knowledge base — naming any gaps it cannot fill.
 
-   ```
-   /capture Payments team owns all checkout error handling
-   ```
+---
 
-7. **Run first refine session**:
+## Top Priorities
 
-   ```
-   /refine
-   ```
+1. **Knowledge Staleness Detection** — Introduce a mechanism to surface distilled entries that may have become outdated, using the existing `last_updated` field on entries.
+2. **Domain Brain Installation and Initialization Mechanism** — Define and implement a mechanism for installing Domain Brain into any project.
+3. **Changelog / Trend Query Mode for /query** — Add a sixth reasoning mode to `/query` — `trend-analysis` or `changelog-query` — that reasons against `changelog.md`.
+4. **Command Namespace Prefix for Domain Brain Extensions** — Commands, skills, and agents from this application should be prefixed with a namespace that clearly identifies them.
+5. **Split Refine Subagent by Specialist Type** — Feature 001 Design Clarifications explicitly deferred creating separate instruction files per specialist type.
 
-8. **Query the brain**:
+---
 
-   ```
-   /query Who owns checkout error handling?
-   ```
-
-## Directory Structure
-
-```
-<domain-root>/
-├── config/
-│   ├── types.yaml       # Type registry — edit to customize capture types
-│   └── identity.md      # Domain identity — created by /frame
-├── raw/                 # Raw item queue — one .md file per /capture or /seed invocation
-├── distilled/           # Distilled knowledge files — written by /refine
-│   ├── domain.md        # Responsibilities and team ownership
-│   ├── codebases.md     # Repos, services, tech stack
-│   ├── interfaces.md    # API contracts, events, integration points
-│   ├── requirements.md  # Constraints and non-negotiables
-│   ├── stakeholders.md  # People, teams, external parties
-│   ├── decisions.md     # ADRs (open and resolved)
-│   ├── backlog.md       # Actionable work items
-│   └── changelog.md     # Refine session audit trail
-└── index/               # Large document chunk index — auto-populated by /capture
-```
-
-## Commands
-
-| Command | Purpose |
-|---|---|
-| `/frame` | Create or update the domain identity (headline, pitch, scope lists) |
-| `/seed <source>` | Bulk-import existing docs, PDFs, or URLs into the raw queue |
-| `/capture <description>` | Capture a raw knowledge item (≤30 seconds, no manual envelope) |
-| `/refine` | Process raw queue — autonomous + governed decisions |
-| `/query <question>` | Ask a natural language question; get a cited answer |
-
-## Tips
-
-- **Commit after every refine session** — the changelog gives you a clean git history.
-- **Keep the distilled base small** — a large growing distilled set signals a quality problem in the refine layer.
-- **Open ADRs are first-class** — they appear in query results for any intersecting topic.
+*Run `/consistency-check` to refresh this document.*
