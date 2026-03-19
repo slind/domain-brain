@@ -583,3 +583,28 @@ SplitCandidate
 **Source items**: [domain-20260318-a4c7]
 
 ---
+
+## [RESOLVED] ADR-020: Commands vs. Skills — governed verbs use commands, proactive verbs use skills
+**Status**: Resolved
+**Captured**: 2026-03-19
+**Context**: ADR-001 established that Domain Brain is delivered as Claude command files only (.claude/commands/). As the verb set grew, a behavioural distinction emerged: some verbs (refine, triage, consistency-check, query, frame) are always user-initiated and deliberate; others (capture, seed) benefit from Claude proactively suggesting them when relevant content arises in normal conversation. Claude Code's skills mechanism supports exactly this proactive-suggestion pattern, while commands remain explicit-only.
+
+**Options considered**:
+- All verbs as commands (existing model — no proactive suggestion possible)
+- All verbs as skills (loses explicit-only guarantee for governed operations)
+- Split: governed verbs as commands, proactive verbs as skills
+
+**Decision**: Governed verbs (refine, triage, consistency-check, query, frame) are implemented as project-local commands (.claude/commands/). They are never auto-triggered. Proactive verbs (capture, seed) are implemented as project-local skills (.claude/skills/). Claude MAY suggest their use when relevant content appears in conversation, but MUST NOT execute any write without explicit user confirmation.
+
+**Rationale**: The all-commands model makes proactive suggestion impossible. The all-skills model risks blurring the boundary on governed operations that should never auto-fire. The split preserves the explicit-only guarantee for destructive/governed verbs while enabling the proactive capture pattern for lightweight knowledge collection.
+
+**Consequences**:
+- The installer must scaffold both `.claude/commands/` and `.claude/skills/` directories.
+- ADR-001 is extended, not superseded: command files remain the delivery mechanism for governed verbs; skills files are the delivery mechanism for proactive verbs.
+- All future verb additions must be classified as governed or proactive at design time.
+- User-confirmation-before-write is a hard constraint on all skill implementations.
+
+**Decided by**: Søren Lindstrøm | **Date**: 2026-03-19
+**Source items**: [domain-20260319-e7b2]
+
+---

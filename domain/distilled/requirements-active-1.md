@@ -544,9 +544,14 @@ When `/refine` invokes a specialist subagent via the Agent tool, it loads the su
 ## Domain Brain Must Be Installable in Any Project
 **Type**: requirement
 **Captured**: 2026-03-18
-**Source**: domain-20260318-3f7c
+**Source**: domain-20260318-3f7c, domain-20260319-c4f1
 
 It must be possible to install Domain Brain in any project as an AI extension (similar to speckit), to keep track of a defined domain of knowledge. The system's portability is a first-class product requirement — not a consequence of how it happens to be built.
+
+**Installation model**: Domain Brain installs per-project (not globally), supporting multiple parallel instances on the same machine. The installer (future feature) must set up:
+- Scaffold folders: `distilled/`, `raw/`, `config/`
+- Project-local commands (`.claude/commands/`): `refine`, `triage`, `consistency-check`, `query`, `frame`
+- Project-local skills (`.claude/skills/`): `capture`, `seed`
 
 ---
 

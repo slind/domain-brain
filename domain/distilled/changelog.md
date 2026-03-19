@@ -2,6 +2,17 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-19 — Refine Session
+
+### Autonomous actions
+- [aggregate]: domain-20260319-c4f1 → aggregated per-project installation specifics (installer components, parallel instances, commands/skills split) into existing requirement "Domain Brain Must Be Installable in Any Project" in requirements-active-1.md
+
+### Governed decisions
+- domain-20260319-e7b2: new_adr_candidate → ADR-020 written (commands vs. skills split)
+  Decided by: Søren Lindstrøm | Rationale: "A" (accepted as proposed)
+
+---
+
 ## 2026-03-19 — Consistency Check Session
 
 No stale entries found. All tracked entries are current.
