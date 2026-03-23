@@ -605,6 +605,8 @@ SplitCandidate
 - User-confirmation-before-write is a hard constraint on all skill implementations.
 
 **Decided by**: Søren Lindstrøm | **Date**: 2026-03-19
-**Source items**: [domain-20260319-e7b2]
+**Source items**: [domain-20260319-e7b2, domain-20260319-b2e4]
+
+**Installer prerequisite**: This classification (governed verbs as commands, proactive verbs as skills) is the prerequisite groundwork for the future installer feature.
 
 ---

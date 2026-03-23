@@ -163,10 +163,18 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 **Status**: open
 **Priority**: high
 **Captured**: 2026-03-19
-**Source**: domain-20260319-c4f1, domain-20260319-e7b2
+**Source**: domain-20260319-c4f1, domain-20260319-e7b2, domain-20260319-c5f7
 **PRD**: prds/domain-20260319-migrate-capture-seed.md
 
 Convert the `capture` and `seed` verbs from `.claude/commands/` to project-local skills in `.claude/skills/`. As skills, they appear in Claude's system-reminder and can be proactively suggested when relevant content surfaces in normal conversation — the user must confirm before any write occurs. Governed/deliberate verbs (`refine`, `triage`, `consistency-check`, `query`, `frame`) remain as commands and are never auto-triggered. This migration is also prerequisite groundwork for the future installer feature (which must set up both `.claude/commands/` and `.claude/skills/` per project). See raw items domain-20260319-c4f1 (per-project install requirement) and domain-20260319-e7b2 (proactive suggestion requirement).
+
+**Implementation tasks**:
+- [ ] Create `.claude/skills/capture/` directory and move `capture.md` content into `SKILL.md` with correct skill frontmatter (`name`, `description`)
+- [ ] Create `.claude/skills/seed/` directory and move `seed.md` content into `SKILL.md` with correct skill frontmatter
+- [ ] Remove `.claude/commands/capture.md`
+- [ ] Remove `.claude/commands/seed.md`
+- [ ] Verify skills appear in Claude's system-reminder by checking frontmatter format matches existing skills (e.g. `~/.agents/skills/grill-me/SKILL.md`)
+- [ ] Update `CLAUDE.md` if it references capture/seed as commands
 
 ---
 
