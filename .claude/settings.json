@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(.claude/commands/*)",
+      "Edit(.claude/commands/*)",
+      "Write(.claude/agents/*)",
+      "Edit(.claude/agents/*)",
+      "Write(.claude/skills/*)",
+      "Edit(.claude/skills/*)",
+      "Bash(rm -rf .specify)"
+    ]
+  }
+}
