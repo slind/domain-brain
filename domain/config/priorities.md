@@ -12,7 +12,6 @@ Run `/triage` → "update guidelines" to edit this file in a guided exchange.
 
 - Items that ensure coherence and correctness of the distilled data set
 - Items that directly unblock other backlog items
-- Items linked to an active `/speckit.specify` session
 - Items required to close a known gap in the current feature set
 - Items that reduce token spend or improve the quality of the refinement pipeline
 

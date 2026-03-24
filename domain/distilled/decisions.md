@@ -166,12 +166,12 @@
 **Context**: Domain Brain command files need a consistent schema to support command-palette discoverability and chained workflows.
 
 **Options considered**:
-- Speckit command file schema with `description` and `handoffs` frontmatter
+- Command file schema with `description` and `handoffs` frontmatter
 - Custom ad-hoc frontmatter per command
 
-**Decision**: All Claude command files follow the speckit command file schema with `description` and `handoffs` frontmatter. The `handoffs` array enables chained workflows (e.g., after `/capture`, offer `/refine`). Domain Brain commands chain `/capture` → `/refine` → `/query`.
+**Decision**: All Claude command files follow a consistent schema with `description` and `handoffs` frontmatter. The `description` field enables command-palette discoverability. The `handoffs` array enables chained workflows (e.g., after `/capture`, offer `/refine`). Domain Brain commands chain `/capture` → `/refine` → `/query`.
 
-**Rationale**: The speckit pattern is proven and enables command-palette discoverability. The `handoffs` mechanism provides natural workflow guidance without hard-wiring sequences, allowing users to deviate when appropriate.
+**Rationale**: A consistent frontmatter schema enables command-palette discoverability and natural workflow guidance. The `handoffs` mechanism provides workflow suggestions without hard-wiring sequences, allowing users to deviate when appropriate.
 
 **Type**: decision
 **Source items**: [domain-20260306-c5d6]
@@ -419,7 +419,7 @@ Design assumptions and constraints established during the Feature 004 (backlog l
 | Priority Guidelines document | Persistent steward-maintained file (`config/priorities.md`) encoding strategic focus as human-readable rules. Read by priority subagent and `/refine` when processing new task items. Optional — if absent, defaults apply. |
 | Triage Session scope | A single conversational `/triage` invocation. May span multiple user turns. Each session that closes or drops items appends to the changelog. |
 | `distilled/backlog.md` pre-existence | Assumed to already exist (created by the existing `/refine` pipeline) when `/triage` is invoked. |
-| Speckit handoff | `/triage` treats the speckit.specify workflow as an available handoff target when starting work on a backlog item. |
+| Standalone work summary | `/triage` "start N" displays the backlog item's full body as a work summary after marking it in-progress, allowing the user to proceed with any planning workflow of their choice. |
 | Priority inference at `/refine` time | Uses the same AI-judgment approach as scope classification — heuristic, not keyword matching — guided by `config/priorities.md`. |
 | Drop vs Close governance | "Drop" (cancel without completion) is a governed decision because it is potentially irreversible and audit-worthy. "Close" (completed) requires only a rationale. |
 
