@@ -4,9 +4,6 @@ handoffs:
   - label: Query the backlog
     agent: query
     prompt: "What's on the backlog?"
-  - label: Start speccing a backlog item
-    agent: speckit.specify
-    prompt: "Specify the next backlog item."
 ---
 
 You are the `/triage` command for the Domain Brain system. Your persona is an **eager junior
@@ -257,7 +254,7 @@ PRIORITY_PROPOSAL:
 1. Look up item N in the session item index. If N is out of range, output the out-of-range error.
 2. Read the entry's full body text (everything between the metadata fields and the `---` separator).
 3. Check the item's current `**Status**`:
-   - If `in-progress`: output `Item [N] is already in progress: "<title>". Start speccing it anyway? (yes / no)` — then follow the same handoff flow below if yes.
+   - If `in-progress`: output `Item [N] is already in progress: "<title>". Display work summary anyway? (yes / no)` — then follow the same display flow below if yes.
    - If `done`: output `Item [N] is already done. Nothing to start.` and re-prompt.
 4. For `open` (or `in-progress` with user confirmation):
    a. Update `**Status**: open` → `**Status**: in-progress` using the Edit tool (use entry title as anchor).
@@ -265,13 +262,21 @@ PRIORITY_PROPOSAL:
       ```
       ✓ Item [N] marked in-progress: "<title>"
 
-      Will start spec with this description:
+      Will begin work with this description:
       "<body text of entry — truncated to ~200 chars if long>"
 
-      Ready to start speccing? (yes / not yet)
+      Ready to begin work? (yes / not yet)
       ```
 5. Wait for confirmation:
-   - "yes" / "ready" / "go" → invoke the speckit handoff: output the instruction to run `/speckit.specify` with the item's full body text as the feature description argument. The handoff should pass the body text verbatim.
+   - "yes" / "ready" / "go" → Display the work item summary:
+     ```
+     Work item summary:
+
+     <full body text of entry — verbatim, no truncation>
+
+     Item [N] is ready to begin. Take this description into your planning workflow of choice.
+     ```
+     Then re-prompt for the next triage action.
    - "not yet" / "no" → output `Item [N] stays in-progress. Come back with "start N" when ready.` and re-prompt.
 
 ---
@@ -364,4 +369,4 @@ If Done section is empty or does not exist: `No done items yet.`
 - **Done section is append-only.** Items move to `## Done` and stay there. No re-opening.
 - **Session item numbers are session-scoped.** Item [N] refers to the numbered position in the current session's display — not a stored ID. Refresh after priority changes if numbers shift.
 - **One exchange for guidelines.** The "update guidelines" intent collects all rules in a single user reply, then writes. Do not ask follow-up questions.
-- **Speckit handoff is one confirmation.** "start N" marks in-progress immediately. The handoff fires on "yes" — no further prompts.
+- **Work summary is one confirmation.** "start N" marks in-progress immediately. The summary displays on "yes" — no further prompts.
