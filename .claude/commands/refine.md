@@ -114,143 +114,6 @@ Then stop.
 
 ---
 
-## Step 6.2 — Split-Check Pre-Processing Phase
-
-Before pre-filtering the raw batch, check whether any loaded distilled file has grown too large for reliable retrieval, and surface split proposals as governed decisions.
-
-### Load threshold configuration
-
-Attempt to read `<domain-root>/config/split-thresholds.md`.
-
-- If found: parse the `**Threshold**:` value from the `## Default` section as `default_threshold` (integer). If the value is missing or unparseable, use `default_threshold = 50` and note in session output: `Warning: invalid threshold in config/split-thresholds.md — using default: 50.`
-- Parse the `## Per-File Overrides` table (if present) into a `per_file_thresholds` map (file path → integer). A value of `0` means "never split this file".
-- If the file is absent: use `default_threshold = 50` and `per_file_thresholds = {}`.
-
-### Count entries per distilled file
-
-For each distilled file loaded in Step 6:
-
-1. Count level-2 headings (`## `) in the file that represent individual distilled entries. A heading qualifies as an entry heading if and only if it is followed (within the same entry block, before the next `---` separator) by a `**Type**:` metadata field.
-2. **Exclude** from the count:
-   - The file-level `# Title` h1 heading (if present)
-   - Any `## ` heading NOT followed by `**Type**:` metadata (e.g., `## Done` in `backlog.md`)
-3. Store the result as `entry_count` for that file.
-
-### Build split-candidates list
-
-For each file, look up its threshold:
-- If the file path appears in `per_file_thresholds`: use that value.
-- Otherwise: use `default_threshold`.
-
-Then classify:
-- If threshold is `0`: skip this file entirely (never split).
-- If `entry_count > threshold`: add to `split_candidates` list.
-- If `entry_count == 1`: add to `single_entry_warnings` list (cannot be split).
-
-If both `split_candidates` and `single_entry_warnings` are empty, proceed directly to Step 6.5 with no output.
-
-### Single-entry warnings
-
-For each file in `single_entry_warnings`, output a non-blocking warning before presenting any split proposals:
-
-```
-Warning: <filename> has only 1 entry — cannot split.
-Consider condensing the entry's body to reduce its size.
-```
-
-Continue the session without blocking.
-
-### Generate and present split proposals (one at a time)
-
-For each file in `split_candidates` (process in the order encountered, one at a time):
-
-**Proposal generation**:
-
-1. Parse all distilled entries from the file by splitting on `## ` heading boundaries; treat each block ending in `---` as one entry.
-2. Extract the `**Captured**: YYYY-MM-DD` value from each entry. If an entry has no `**Captured**` field, treat its date as `0000-01-01` for sorting purposes.
-3. Sort entries by captured date **descending** (most recent first).
-4. Assign the top ⌈N/2⌉ entries to the **active group**; the remaining entries to the **archived group**.
-5. **Fallback** — if all entries have identical captured dates: group by `**Type**` field instead (all entries of each type together). If types are also uniform, set `grouping_axis = steward_directed` and proceed directly to the Option C flow.
-6. Generate sub-file names using `{base}-{group-label}-{n}.md`:
-   - `{base}` = the original filename without `.md` extension (e.g., `requirements`)
-   - `{group-label}` = `active` or `archived`
-   - `{n}` = `1`; increment if `domain/distilled/{base}-{group-label}-{n}.md` already exists
-
-**Present as a governed decision**:
-
-```
-File split required (<current> of <total split candidates>):
-
-<filename> has <entry_count> entries (threshold: <T>).
-Proposed split by recency:
-  Active:   <active-sub-file>   (<n_active> entries, captured <oldest-active-date> – <newest-date>)
-  Archived: <archived-sub-file> (<n_archived> entries, captured <oldest-archived-date> – <newest-archived-date>)
-
-Options:
-  A. Confirm split as proposed
-  B. Skip for now (will be flagged again next session)
-  C. Provide different grouping (describe your preferred partition)
-  Z. Flag as unresolved (create open ADR in decisions.md)
-
-You can reply with an option letter or describe your intent.
-```
-
-Wait for the steward's response. Interpret natural language and dispatch to the option handler below. If the response is ambiguous, ask one clarifying question before dispatching.
-
-### Option A — Confirm split
-
-1. Ask for an optional one-line rationale: `Rationale for splitting <filename>? (press Enter to skip)`. If the steward provides no input, use `"no rationale provided"`.
-2. Execute the split:
-   a. **Write active sub-file**: Construct file content as a `# <Original Title> — Active` heading followed by all entries assigned to the active group (preserving original Markdown exactly). Write to `domain/distilled/<active-sub-file>` using the Write tool.
-   b. **Write archived sub-file**: Construct file content as a `# <Original Title> — Archived` heading followed by all entries assigned to the archived group (preserving original Markdown exactly). Write to `domain/distilled/<archived-sub-file>` using the Write tool.
-   c. **Retire the original file**: Only after both sub-files are successfully written, overwrite the original file with the following retirement redirect notice (using the Write tool):
-      ```
-      # <Original Title>
-
-      > This file was split on <YYYY-MM-DD>.
-      > Active entries: `<active-sub-file>`
-      > Archived entries: `<archived-sub-file>`
-      >
-      > This file is retained for git history continuity.
-      ```
-   d. **Reload distilled context**: Add both sub-files to the in-memory loaded context and remove the retired original, so that Step 6.5 semantic duplicate detection operates on the updated file set.
-3. Record the split in the session log: `{ source_file, active_sub_file, n_active, archived_sub_file, n_archived, rationale }`.
-4. Output: `✓ Split complete: <source_file> → <active-sub-file> (<n_active> entries) + <archived-sub-file> (<n_archived> entries)`
-
-**No partial splits**: If any write fails mid-execution, report the error and leave the original file unchanged. Do not write the retirement notice unless both sub-files have been successfully written.
-
-### Option B — Skip
-
-Make no file writes. Do not log the skipped proposal to the changelog (skipped proposals are silent). Continue to the next split candidate, or proceed to Step 6.5 if no more candidates remain.
-
-### Option C — Custom grouping
-
-1. Ask the steward to describe the desired partition in natural language.
-2. Re-generate the split proposal using `grouping_axis = steward_directed`: interpret the description to assign each entry to one of two groups; name the groups after the steward's intent (e.g., `pre-feature-004` and `post-feature-004`; use these as the `{group-label}` values in sub-file names).
-3. Re-present the updated proposal using the same governed decision format. This counts as the same governed decision turn — not a new one in the total count.
-4. On confirmation (steward replies with A or equivalent), execute the split using the Option A execution steps (2a–2d above).
-
-### Option Z — Flag as unresolved
-
-1. Read `domain/distilled/decisions.md` to find the highest existing ADR number. The next ADR number is that value + 1 (or `001` if no ADRs exist yet).
-2. Append the following open ADR to `domain/distilled/decisions.md`:
-   ```markdown
-   ## [OPEN] ADR-<NNN>: Split <filename>
-   **Status**: open
-   **Captured**: <YYYY-MM-DD>
-   **Context**: <filename> has <entry_count> entries (threshold: <T>). A split was proposed but deferred.
-   **Options**:
-   - A: Split into active/archived sub-files (recency axis)
-   - B: Raise threshold for this file in config/split-thresholds.md
-   **Flagged by**: refine agent (Step 6.2 split-check)
-   **Pending**: Steward decision on split strategy
-
-   ---
-   ```
-3. Continue to the next split candidate or proceed to Step 6.5.
-
----
-
 ## Step 6.5 — Pre-filter batch
 
 Before invoking any subagent, use the context already loaded in Step 6 to eliminate items
@@ -382,13 +245,16 @@ specialist plans in Step 7.
 
 ## Step 9 — Execute autonomous actions
 
+Initialize an empty `touched_files` set to track which distilled files are modified during this session.
+
 For each entry in AUTONOMOUS_ACTIONS:
 
 1. Read the target distilled file.
 2. Apply the content change (append new entry, merge into existing, etc.).
 3. Write the updated distilled file using the Edit or Write tool.
-4. Record the action in the session log (in-memory list for the changelog).
-5. Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
+4. Add the distilled file path to `touched_files`.
+5. Record the action in the session log (in-memory list for the changelog).
+6. Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
 Do all of this silently — no output to the user per FR-008.
 
@@ -438,10 +304,151 @@ Determine the chosen option:
   note or rationale they provided.
 
 Write the chosen content to the target distilled file.
+Add the distilled file path to `touched_files`.
 Record the decision in the session log: item_id, topic, outcome, rationale (user's words).
 Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
 Advance to the next governed decision.
+
+---
+
+## Step 10.5 — Post-session split-check
+
+After all autonomous actions and governed decisions are complete, check whether any modified distilled file has grown too large for reliable retrieval, and surface split proposals as governed decisions.
+
+If `touched_files` is empty (e.g., all items were pre-filtered), skip this step entirely and proceed to Step 11.
+
+### Load threshold configuration
+
+Attempt to read `<domain-root>/config/split-thresholds.md`.
+
+- If found: parse the `**Threshold**:` value from the `## Default` section as `default_threshold` (integer). If the value is missing or unparseable, use `default_threshold = 50` and note in session output: `Warning: invalid threshold in config/split-thresholds.md — using default: 50.`
+- Parse the `## Per-File Overrides` table (if present) into a `per_file_thresholds` map (file path → integer). A value of `0` means "never split this file".
+- If the file is absent: use `default_threshold = 50` and `per_file_thresholds = {}`.
+
+### Count entries per touched file
+
+For each file in `touched_files`:
+
+1. Read the file content.
+2. Count level-2 headings (`## `) in the file that represent individual distilled entries. A heading qualifies as an entry heading if and only if it is followed (within the same entry block, before the next `---` separator) by a `**Type**:` metadata field.
+3. **Exclude** from the count:
+   - The file-level `# Title` h1 heading (if present)
+   - Any `## ` heading NOT followed by `**Type**:` metadata (e.g., `## Done` in `backlog.md`)
+4. Store the result as `entry_count` for that file.
+
+### Build split-candidates list
+
+For each touched file, look up its threshold:
+- If the file path appears in `per_file_thresholds`: use that value.
+- Otherwise: use `default_threshold`.
+
+Then classify:
+- If threshold is `0`: skip this file entirely (never split).
+- If `entry_count > threshold`: add to `split_candidates` list.
+- If `entry_count == 1`: add to `single_entry_warnings` list (cannot be split).
+
+If both `split_candidates` and `single_entry_warnings` are empty, proceed directly to Step 11 with no output.
+
+### Single-entry warnings
+
+For each file in `single_entry_warnings`, output a non-blocking warning before presenting any split proposals:
+
+```
+Warning: <filename> has only 1 entry — cannot split.
+Consider condensing the entry's body to reduce its size.
+```
+
+Continue the session without blocking.
+
+### Generate and present split proposals (one at a time)
+
+For each file in `split_candidates` (process in the order encountered, one at a time):
+
+**Proposal generation**:
+
+1. Parse all distilled entries from the file by splitting on `## ` heading boundaries; treat each block ending in `---` as one entry.
+2. Extract the `**Captured**: YYYY-MM-DD` value from each entry. If an entry has no `**Captured**` field, treat its date as `0000-01-01` for sorting purposes.
+3. Sort entries by captured date **descending** (most recent first).
+4. Assign the top ⌈N/2⌉ entries to the **active group**; the remaining entries to the **archived group**.
+5. **Fallback** — if all entries have identical captured dates: group by `**Type**` field instead (all entries of each type together). If types are also uniform, set `grouping_axis = steward_directed` and proceed directly to the Option C flow.
+6. Generate sub-file names using `{base}-{group-label}-{n}.md`:
+   - `{base}` = the original filename without `.md` extension (e.g., `requirements`)
+   - `{group-label}` = `active` or `archived`
+   - `{n}` = `1`; increment if `domain/distilled/{base}-{group-label}-{n}.md` already exists
+
+**Present as a governed decision**:
+
+```
+File split required (<current> of <total split candidates>):
+
+<filename> has <entry_count> entries (threshold: <T>).
+Proposed split by recency:
+  Active:   <active-sub-file>   (<n_active> entries, captured <oldest-active-date> – <newest-date>)
+  Archived: <archived-sub-file> (<n_archived> entries, captured <oldest-archived-date> – <newest-archived-date>)
+
+Options:
+  A. Confirm split as proposed
+  B. Skip for now (will be flagged again next session)
+  C. Provide different grouping (describe your preferred partition)
+  Z. Flag as unresolved (create open ADR in decisions.md)
+
+You can reply with an option letter or describe your intent.
+```
+
+Wait for the steward's response. Interpret natural language and dispatch to the option handler below. If the response is ambiguous, ask one clarifying question before dispatching.
+
+### Option A — Confirm split
+
+1. Ask for an optional one-line rationale: `Rationale for splitting <filename>? (press Enter to skip)`. If the steward provides no input, use `"no rationale provided"`.
+2. Execute the split:
+   a. **Write active sub-file**: Construct file content as a `# <Original Title> — Active` heading followed by all entries assigned to the active group (preserving original Markdown exactly). Write to `domain/distilled/<active-sub-file>` using the Write tool.
+   b. **Write archived sub-file**: Construct file content as a `# <Original Title> — Archived` heading followed by all entries assigned to the archived group (preserving original Markdown exactly). Write to `domain/distilled/<archived-sub-file>` using the Write tool.
+   c. **Retire the original file**: Only after both sub-files are successfully written, overwrite the original file with the following retirement redirect notice (using the Write tool):
+      ```
+      # <Original Title>
+
+      > This file was split on <YYYY-MM-DD>.
+      > Active entries: `<active-sub-file>`
+      > Archived entries: `<archived-sub-file>`
+      >
+      > This file is retained for git history continuity.
+      ```
+   d. **Update touched_files**: Add both sub-files to `touched_files` and keep the retired original file in the set (it was written to with the retirement notice).
+3. Record the split in the session log: `{ source_file, active_sub_file, n_active, archived_sub_file, n_archived, rationale }`.
+4. Output: `✓ Split complete: <source_file> → <active-sub-file> (<n_active> entries) + <archived-sub-file> (<n_archived> entries)`
+
+**No partial splits**: If any write fails mid-execution, report the error and leave the original file unchanged. Do not write the retirement notice unless both sub-files have been successfully written.
+
+### Option B — Skip
+
+Make no file writes. Do not log the skipped proposal to the changelog (skipped proposals are silent). Continue to the next split candidate, or proceed to Step 11 if no more candidates remain.
+
+### Option C — Custom grouping
+
+1. Ask the steward to describe the desired partition in natural language.
+2. Re-generate the split proposal using `grouping_axis = steward_directed`: interpret the description to assign each entry to one of two groups; name the groups after the steward's intent (e.g., `pre-feature-004` and `post-feature-004`; use these as the `{group-label}` values in sub-file names).
+3. Re-present the updated proposal using the same governed decision format. This counts as the same governed decision turn — not a new one in the total count.
+4. On confirmation (steward replies with A or equivalent), execute the split using the Option A execution steps (2a–2d above).
+
+### Option Z — Flag as unresolved
+
+1. Read `domain/distilled/decisions.md` to find the highest existing ADR number. The next ADR number is that value + 1 (or `001` if no ADRs exist yet).
+2. Append the following open ADR to `domain/distilled/decisions.md`:
+   ```markdown
+   ## [OPEN] ADR-<NNN>: Split <filename>
+   **Status**: open
+   **Captured**: <YYYY-MM-DD>
+   **Context**: <filename> has <entry_count> entries (threshold: <T>). A split was proposed but deferred.
+   **Options**:
+   - A: Split into active/archived sub-files (recency axis)
+   - B: Raise threshold for this file in config/split-thresholds.md
+   **Flagged by**: refine agent (Step 10.5 post-session split-check)
+   **Pending**: Steward decision on split strategy
+
+   ---
+   ```
+3. Continue to the next split candidate or proceed to Step 11.
 
 ---
 
