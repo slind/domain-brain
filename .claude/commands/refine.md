@@ -81,36 +81,63 @@ Starting refine session...
 
 ## Step 6 — Load distilled context
 
-Read all files in `<domain-root>/distilled/` so the subagent has current state to reason
-against during processing. Also read `<domain-root>/config/types.yaml` for type descriptions.
+### Collect batch types
 
-Additionally, attempt to read `<domain-root>/config/identity.md`. If it exists, include its
-full content as domain identity context for the subagent. If it does not exist, proceed
-without it — no error. The subagent uses the identity (pitch and scope lists) to make
-scope-aware archival decisions for seeded items.
+Inspect the raw items loaded in Step 4 and collect the set of declared types present in the
+batch: `batch_types`. This is the set of unique `type:` values from the frontmatter of all
+items in the batch.
 
-Additionally, attempt to read `<domain-root>/config/priorities.md`. If it exists, pass its
-full content to the generalist subagent as `priority_guidelines`. If it does not exist, pass
-`priority_guidelines: null`. The subagent uses the guidelines to assign initial priority to
-new task-typed items when routing them to `backlog.md`.
+### Determine context loading strategy
 
-Additionally, attempt to read `<domain-root>/config/similarity.md`. Parse the `**Level**:`
-value from the `## Threshold` section.
-- If found and value is one of `conservative`, `moderate`, or `aggressive`: set
-  `similarity_config = { level: <value>, source: "config/similarity.md" }`.
-- If found but value is not one of the three allowed values: set
-  `similarity_config = { level: "moderate", source: "default" }` and note in session output:
-  `Warning: invalid similarity level in config/similarity.md — using default: moderate.`
-- If not found: set `similarity_config = { level: "moderate", source: "default" }` and note
-  in session output: `No similarity config found — using default threshold: moderate.`
+Check if `batch_types` contains any of: `mom`, `other`, `stakeholder`, or any type name not
+defined in `config/types.yaml` (loaded in Step 3).
 
-Additionally, read `.claude/agents/refine-subagent.md` and store its contents as
-`subagent_instructions`. If the file is absent or unreadable, output:
-```
-Error: Subagent instruction file not found: .claude/agents/refine-subagent.md
-Ensure the file exists before running /refine.
-```
-Then stop.
+- If **any** of these are present: set `load_strategy = full` (load all distilled files).
+- Otherwise: set `load_strategy = selective` (load only type-relevant distilled files).
+
+### Load distilled context (selective or full)
+
+If `load_strategy = full`:
+- Read all files in `<domain-root>/distilled/`.
+
+If `load_strategy = selective`:
+- For each type in `batch_types`, look up its `routes_to` value in the type registry.
+- For each `routes_to` path (e.g., `distilled/requirements.md`):
+  - Extract the base filename without extension (e.g., `requirements`).
+  - Use Glob to find all files matching `<domain-root>/distilled/<base>*.md`.
+  - This handles both the original file and any split versions (e.g., `requirements-active-1.md`, `requirements-archived-1.md`).
+- Collect the set of unique distilled file paths from all matches.
+- Read all matched distilled files.
+
+### Load configuration files (always)
+
+Regardless of load strategy, always read the following configuration files:
+
+- `<domain-root>/config/types.yaml` (already loaded in Step 3 — reuse)
+- `<domain-root>/config/identity.md`: If it exists, include its full content as domain
+  identity context for the subagent. If it does not exist, proceed without it — no error.
+  The subagent uses the identity (pitch and scope lists) to make scope-aware archival
+  decisions for seeded items.
+- `<domain-root>/config/priorities.md`: If it exists, pass its full content to the
+  generalist subagent as `priority_guidelines`. If it does not exist, pass
+  `priority_guidelines: null`. The subagent uses the guidelines to assign initial priority
+  to new task-typed items when routing them to `backlog.md`.
+- `<domain-root>/config/similarity.md`: Parse the `**Level**:` value from the `## Threshold`
+  section.
+  - If found and value is one of `conservative`, `moderate`, or `aggressive`: set
+    `similarity_config = { level: <value>, source: "config/similarity.md" }`.
+  - If found but value is not one of the three allowed values: set
+    `similarity_config = { level: "moderate", source: "default" }` and note in session output:
+    `Warning: invalid similarity level in config/similarity.md — using default: moderate.`
+  - If not found: set `similarity_config = { level: "moderate", source: "default" }` and note
+    in session output: `No similarity config found — using default threshold: moderate.`
+- `.claude/agents/refine-subagent.md`: Store its contents as `subagent_instructions`. If the
+  file is absent or unreadable, output:
+  ```
+  Error: Subagent instruction file not found: .claude/agents/refine-subagent.md
+  Ensure the file exists before running /refine.
+  ```
+  Then stop.
 
 ---
 
