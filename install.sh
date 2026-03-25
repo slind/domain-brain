@@ -11,7 +11,6 @@ GITHUB_RAW_BASE="https://raw.githubusercontent.com/slind/domain-brain/main"
 
 # Command files to install (from .claude/commands/)
 COMMANDS=(
-  "domain:capture.md"
   "domain:consistency-check.md"
   "domain:frame.md"
   "domain:query.md"
