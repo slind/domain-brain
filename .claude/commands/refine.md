@@ -265,9 +265,9 @@ per line; collapse runs of blank lines to a single blank line). Compare the norm
 against the content of all loaded distilled files.
 
 If the normalised body appears verbatim in any distilled file:
-- Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
 - Record `{ item_id, filter_reason: "duplicate", matched_file: <distilled file path> }` in
   `pre_filter_results`.
+- Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 - Remove the item from the active batch.
 
 ### 6.5b — Out-of-scope pre-filter
@@ -278,9 +278,9 @@ same confidence bar required for the subagent's `out_of_scope` autonomous action
 classify an item as out-of-scope when there is no reasonable doubt.
 
 If the item clearly matches a term on the Out-of-scope list:
-- Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
 - Record `{ item_id, filter_reason: "out_of_scope", matched_term: <matched term> }` in
   `pre_filter_results`.
+- Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 - Remove the item from the active batch.
 
 Items that are ambiguous or only partially matching MUST NOT be pre-filtered — pass them to
@@ -306,9 +306,9 @@ For each remaining item in the active batch:
    | `aggressive` | The item addresses the same topic as a distilled entry, even if it adds some peripheral detail. Only genuinely new knowledge (new claims, new entities, new constraints) passes through. |
 
 3. **If a semantic duplicate is identified**:
-   - Set the raw item's `status` field from `raw` to `refined` using the Edit tool.
    - Record in `pre_filter_results`:
      `{ item_id, filter_reason: "semantic_duplicate", matched_entry: <title or ID of the matched distilled entry>, similarity_basis: <brief phrase explaining the semantic overlap, e.g. "both describe the retry-on-failure policy"> }`
+   - Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
    - Remove the item from the active batch.
 
 4. **If no match is found** (or item was below minimum length): leave item in active batch.
@@ -321,7 +321,7 @@ For each remaining item in the active batch:
 ### Empty batch after pre-filtering
 
 If the active batch is empty after all three checks (6.5a, 6.5b, 6.5c):
-1. All items have already had their status set to `refined` (done above).
+1. All items have already been deleted from the raw queue (done above).
 2. Skip Steps 7–10.
 3. Proceed directly to Step 11 with the note: "All items were eliminated by host
    pre-filtering. No subagent invoked."
@@ -387,8 +387,8 @@ For each entry in AUTONOMOUS_ACTIONS:
 1. Read the target distilled file.
 2. Apply the content change (append new entry, merge into existing, etc.).
 3. Write the updated distilled file using the Edit or Write tool.
-4. Update the raw item's `status` field from `raw` to `refined` using the Edit tool.
-5. Record the action in the session log (in-memory list for the changelog).
+4. Record the action in the session log (in-memory list for the changelog).
+5. Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
 Do all of this silently — no output to the user per FR-008.
 
@@ -438,8 +438,8 @@ Determine the chosen option:
   note or rationale they provided.
 
 Write the chosen content to the target distilled file.
-Update the raw item's `status` to `refined`.
 Record the decision in the session log: item_id, topic, outcome, rationale (user's words).
+Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
 Advance to the next governed decision.
 
@@ -450,7 +450,7 @@ Advance to the next governed decision.
 Whether the session completes normally or the user requests a pause:
 
 1. Count remaining unprocessed items (if paused: items not yet reached; if complete: 0).
-2. Leave all unprocessed raw items with `status: raw` unchanged.
+2. Unprocessed raw files remain in the queue with `status: raw` unchanged.
 
 ---
 
@@ -549,6 +549,6 @@ Changelog updated with progress so far.
 - **Accept natural language.** Do not require option letter codes — interpret intent.
 - **The host writes files, never the subagent.** All file writes happen in Steps 9 and 10,
   executed by the host command based on the subagent's refine plan.
-- **Archive processed items.** Set status: refined on every raw item that has been handled.
+- **Delete processed items.** Delete the raw file for every item that has been handled.
 - **Pause cleanly.** If the user stops the session, write the changelog and leave the queue
   intact. Never partially-process an item.
