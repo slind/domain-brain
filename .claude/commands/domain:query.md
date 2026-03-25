@@ -239,7 +239,7 @@ I can answer partially, but the following knowledge is missing:
   Missing: <specific description of what's not in the knowledge base>
 
 Would you like to capture this now?
-  /capture --type <inferred-type> "<suggested title>"
+  /domain:capture --type <inferred-type> "<suggested title>"
 Or proceed with the answer flagged as incomplete?
 ```
 
@@ -251,7 +251,7 @@ I cannot answer this from the current distilled knowledge base.
   Missing: <specific description of what would be needed>
 
 Would you like to capture this now?
-  /capture --type <inferred-type> "<suggested title>"
+  /domain:capture --type <inferred-type> "<suggested title>"
 ```
 
 ### Sources

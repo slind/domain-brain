@@ -1,6 +1,6 @@
 # Refine Subagent
 
-**Invoked by**: `/refine` (Step 7 — specialist subagent invocation)
+**Invoked by**: `/domain:refine` (Step 7 — specialist subagent invocation)
 **Processes**: All item types — requirements, interfaces, decisions, codebase, responsibility, and generalist cluster items
 **Output contract**: REFINE_PLAN with AUTONOMOUS_ACTIONS and GOVERNED_DECISIONS sections (JSON-like structure)
 

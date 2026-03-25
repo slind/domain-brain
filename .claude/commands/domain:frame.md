@@ -177,7 +177,7 @@ If any seeded raw items exist in the queue, output:
 ```
 ⚠ Warning: <N> seeded raw item(s) in queue were classified under the previous identity.
   Their scope classifications may be stale under the new scope definition.
-  Run /refine to review them before the new identity takes full effect.
+  Run /domain:refine to review them before the new identity takes full effect.
 ```
 
 ### Check 2 — Existing distilled knowledge
@@ -205,7 +205,7 @@ Identity created: config/identity.md
   Steward: <steward>
   One-line: <one-line>
 
-Run /seed to import existing knowledge, or /capture to start adding items manually.
+Run /domain:seed to import existing knowledge, or /domain:capture to start adding items manually.
 ```
 
 ### Re-run success

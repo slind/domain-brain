@@ -214,7 +214,7 @@ Attempt to read `<domain-root>/config/identity.md`.
 
 If the file does not exist:
 - Set `readme_action = "skipped"`.
-- Output: `README refresh skipped — config/identity.md not found. Run /frame to enable.`
+- Output: `README refresh skipped — config/identity.md not found. Run /domain:frame to enable.`
 - Proceed to Step 7 (skip steps 6b–6e).
 
 If the file exists, parse:
@@ -277,13 +277,13 @@ Write the following content to `<domain-root>/README.md` using the Write tool (a
 
 Domain Brain is a structured knowledge companion for software teams. It captures, refines, and surfaces domain knowledge so that every decision, requirement, and interface is traceable and queryable.
 
-Use `/frame` to define or update the domain identity — the one-line description, pitch, and scope boundaries that give the system its focus.
+Use `/domain:frame` to define or update the domain identity — the one-line description, pitch, and scope boundaries that give the system its focus.
 
-Use `/capture` or `/seed` to bring knowledge into the system. `/capture` takes a single item in natural language; `/seed` imports from an existing document, URL, or directory.
+Use `/domain:capture` or `/domain:seed` to bring knowledge into the system. `/domain:capture` takes a single item in natural language; `/domain:seed` imports from an existing document, URL, or directory.
 
-Use `/refine` to process the raw queue — the refine agent deduplicates, classifies, and routes each item into the appropriate distilled knowledge file, surfacing governed decisions one at a time.
+Use `/domain:refine` to process the raw queue — the refine agent deduplicates, classifies, and routes each item into the appropriate distilled knowledge file, surfacing governed decisions one at a time.
 
-Use `/query` to ask questions about the domain. The query agent classifies your question, retrieves only relevant distilled entries, and grounds every answer in the knowledge base — naming any gaps it cannot fill.
+Use `/domain:query` to ask questions about the domain. The query agent classifies your question, retrieves only relevant distilled entries, and grounds every answer in the knowledge base — naming any gaps it cannot fill.
 
 ---
 
@@ -293,7 +293,7 @@ Use `/query` to ask questions about the domain. The query agent classifies your 
 
 ---
 
-*Run `/consistency-check` to refresh this document.*
+*Run `/domain:consistency-check` to refresh this document.*
 ```
 
 **Interfaces section**: if `interfaces_list` is empty, write `No interfaces defined yet.` Otherwise render as a bulleted list (`- Interface Title`).

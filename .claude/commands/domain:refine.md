@@ -131,11 +131,11 @@ Regardless of load strategy, always read the following configuration files:
     `Warning: invalid similarity level in config/similarity.md — using default: moderate.`
   - If not found: set `similarity_config = { level: "moderate", source: "default" }` and note
     in session output: `No similarity config found — using default threshold: moderate.`
-- `.claude/agents/refine-subagent.md`: Store its contents as `subagent_instructions`. If the
+- `.claude/agents/domain-refine-subagent.md`: Store its contents as `subagent_instructions`. If the
   file is absent or unreadable, output:
   ```
-  Error: Subagent instruction file not found: .claude/agents/refine-subagent.md
-  Ensure the file exists before running /refine.
+  Error: Subagent instruction file not found: .claude/agents/domain-refine-subagent.md
+  Ensure the file exists before running /domain:refine.
   ```
   Then stop.
 
@@ -246,7 +246,7 @@ For each non-empty cluster, invoke the refine subagent using the Agent tool
 (subagent_type=general) with:
 - The cluster's items (title, type, body, id)
 - Only the cluster's designated context files
-- The subagent instruction text loaded from `.claude/agents/refine-subagent.md` in Step 6 (variable: `subagent_instructions`)
+- The subagent instruction text loaded from `.claude/agents/domain-refine-subagent.md` in Step 6 (variable: `subagent_instructions`)
 
 Multiple clusters may be invoked concurrently.
 
