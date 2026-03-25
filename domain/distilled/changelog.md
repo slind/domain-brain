@@ -2,6 +2,14 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-25 — Triage Session
+
+### Closed
+- [close]: grill-20260324-perf1 → Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
+  Rationale: "Implemented in github issue 4"
+
+---
+
 ## 2026-03-24 — Grill Session
 
 ### Captured

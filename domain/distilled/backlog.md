@@ -94,7 +94,7 @@ Commands, skills, and agents from this application should be prefixed with a nam
 
 ## Domain Brain Installation and Initialization Mechanism
 **Type**: task
-**Status**: open
+**Status**: in-progress
 **Priority**: high
 **Captured**: 2026-03-18
 **Source**: query-20260318-gap1
@@ -158,9 +158,14 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 
 ---
 
+
+
+
+## Done
+
 ## Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
 **Type**: task
-**Status**: in-progress
+**Status**: done
 **Priority**: high
 **Captured**: 2026-03-24
 **Source**: grill-20260324-perf1
@@ -178,11 +183,9 @@ Step 7 already routes to specialists with filtered context (e.g., `requirement` 
 
 **Not in scope**: Splitting `refine-subagent.md` into 5 files (task [5] in backlog) — that is a maintainability improvement, not a performance fix.
 
+Rationale: Implemented in github issue 4
+
 ---
-
-
-
-## Done
 
 ## Remove Speckit Dependency from Domain Brain
 **Type**: task
