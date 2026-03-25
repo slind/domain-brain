@@ -160,7 +160,7 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 
 ## Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
 **Type**: task
-**Status**: open
+**Status**: in-progress
 **Priority**: high
 **Captured**: 2026-03-24
 **Source**: grill-20260324-perf1
