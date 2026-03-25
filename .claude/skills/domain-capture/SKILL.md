@@ -145,6 +145,8 @@ Then stop without creating any file.
 
 ## Step 8 — Write the raw item file
 
+Create the `<domain-root>/raw/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/raw"`).
+
 Write the file to `<domain-root>/raw/<id>.md` with this exact structure:
 
 ```
@@ -187,7 +189,8 @@ If a large document is detected, run the large document pipeline:
    - Markdown documents: split at `##` or `###` headings.
    - PDFs / plain text: split at paragraph breaks or every ~500 tokens if no natural breaks.
 3. Generate a `doc-id` from the filename (lowercase, hyphens for spaces, strip extension).
-4. For each chunk (numbered from 0001):
+4. Create the `<domain-root>/index/<doc-id>/chunks/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/index/<doc-id>/chunks"`).
+5. For each chunk (numbered from 0001):
    - Write `<domain-root>/index/<doc-id>/chunks/chunk-NNNN.md` with frontmatter:
      ```
      ---
@@ -198,9 +201,9 @@ If a large document is detected, run the large document pipeline:
 
      <chunk content>
      ```
-5. Write `<domain-root>/index/<doc-id>/summary.md` with a ≤500-word summary of the full
+6. Write `<domain-root>/index/<doc-id>/summary.md` with a ≤500-word summary of the full
    document.
-6. In the raw item body, append:
+7. In the raw item body, append:
    ```
    Large-document: <doc-id>
    Summary: <one-line summary>

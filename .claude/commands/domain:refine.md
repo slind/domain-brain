@@ -274,6 +274,8 @@ specialist plans in Step 7.
 
 Initialize an empty `touched_files` set to track which distilled files are modified during this session.
 
+Create the `<domain-root>/distilled/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/distilled"`).
+
 For each entry in AUTONOMOUS_ACTIONS:
 
 1. Read the target distilled file.

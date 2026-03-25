@@ -214,6 +214,8 @@ If neither phase resolves the type, assign `other` silently. Do not ask the user
 
 ### Raw item format
 
+Create the `<domain-root>/raw/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/raw"`).
+
 Write each in-scope or ambiguous segment as `<domain-root>/raw/<id>.md`:
 
 ```yaml

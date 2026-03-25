@@ -242,8 +242,9 @@ PRIORITY_PROPOSAL:
    What are your priority rules?
    ```
 4. Wait for the user's response (one exchange — they provide their rules in a single reply).
-5. Write the updated content to `<domain-root>/config/priorities.md` using the Write tool. The file should follow the format in `domain/config/priorities.md` (three section headings: Elevate to High, Keep at Medium, Defer to Low).
-6. Output: `✓ Priority guidelines saved to config/priorities.md.` and offer: `Say "apply guidelines" to re-rank the current backlog against the new rules.`
+5. Create the `<domain-root>/config/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/config"`).
+6. Write the updated content to `<domain-root>/config/priorities.md` using the Write tool. The file should follow the format in `domain/config/priorities.md` (three section headings: Elevate to High, Keep at Medium, Defer to Low).
+7. Output: `✓ Priority guidelines saved to config/priorities.md.` and offer: `Say "apply guidelines" to re-rank the current backlog against the new rules.`
 
 ---
 

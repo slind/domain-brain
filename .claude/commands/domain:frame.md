@@ -131,6 +131,8 @@ Please provide all four sections and try again.
 
 ## Step 6 — Write config/identity.md
 
+Create the `<domain-root>/config/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/config"`).
+
 Write the file at `<domain-root>/config/identity.md` using this exact structure:
 
 ```markdown

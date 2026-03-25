@@ -308,6 +308,8 @@ Output: `✓ README.md <created|updated> (<interfaces_count> interfaces, <priori
 
 ## Step 7 — Append session changelog entry
 
+Create the `<domain-root>/distilled/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/distilled"`).
+
 Use the Edit tool to append to `<domain-root>/distilled/changelog.md` (create with Write tool if absent).
 
 **If staleness candidates were found and reviewed:**
