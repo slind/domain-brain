@@ -158,9 +158,53 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 
 ---
 
-## Migrate capture and seed from commands to project-local skills
+## Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
 **Type**: task
 **Status**: open
+**Priority**: high
+**Captured**: 2026-03-24
+**Source**: grill-20260324-perf1
+
+`/refine` is slow even for 2-item batches because it over-reads before any subagent is invoked. Three independent fixes, in descending impact:
+
+**1. Delete refined raw files** (highest impact)
+Raw files currently accumulate indefinitely with `status: refined`. With 248 files in the queue, every session scans all of them to find unrefined items. Refined files serve no purpose after routing — delete them. Queue scan becomes O(pending items only).
+
+**2. Move split-check to post-session** (removes upfront full-load)
+Step 6.2 currently counts entries in ALL distilled files before the batch is processed, to decide which files need splitting. This is the primary driver of the full-context pre-load. Move it: only evaluate files that were actually written to during the session.
+
+**3. Verify Step 6 loads only type-relevant files**
+Step 7 already routes to specialists with filtered context (e.g., `requirement` → requirements + decisions + identity only). But Step 6 loads all distilled files first, bypassing this. Once the split-check is moved post-session, Step 6 should load only the routing targets for the declared types in the batch. `mom` and `other` items retain full-load as the generalist fallback — this is correct since these types genuinely span multiple distilled files.
+
+**Not in scope**: Splitting `refine-subagent.md` into 5 files (task [5] in backlog) — that is a maintainability improvement, not a performance fix.
+
+---
+
+
+
+## Done
+
+## Remove Speckit Dependency from Domain Brain
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-24
+**Source**: domain-20260324-a3f1
+
+Remove all remaining Speckit dependencies from Domain Brain. This includes:
+- Any commands that forward to Speckit (e.g., `/triage` handing off tasks to Speckit workflows)
+- References to Speckit in command files, config, or documentation
+- Any assumptions that Speckit is present in the host environment
+
+Domain Brain must function as a fully self-contained system with no runtime dependency on Speckit.
+
+Rationale: Item implemented
+
+---
+
+## Migrate capture and seed from commands to project-local skills
+**Type**: task
+**Status**: done
 **Priority**: high
 **Captured**: 2026-03-19
 **Source**: domain-20260319-c4f1, domain-20260319-e7b2, domain-20260319-c5f7
@@ -169,16 +213,16 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 Convert the `capture` and `seed` verbs from `.claude/commands/` to project-local skills in `.claude/skills/`. As skills, they appear in Claude's system-reminder and can be proactively suggested when relevant content surfaces in normal conversation — the user must confirm before any write occurs. Governed/deliberate verbs (`refine`, `triage`, `consistency-check`, `query`, `frame`) remain as commands and are never auto-triggered. This migration is also prerequisite groundwork for the future installer feature (which must set up both `.claude/commands/` and `.claude/skills/` per project). See raw items domain-20260319-c4f1 (per-project install requirement) and domain-20260319-e7b2 (proactive suggestion requirement).
 
 **Implementation tasks**:
-- [ ] Create `.claude/skills/capture/` directory and move `capture.md` content into `SKILL.md` with correct skill frontmatter (`name`, `description`)
-- [ ] Create `.claude/skills/seed/` directory and move `seed.md` content into `SKILL.md` with correct skill frontmatter
-- [ ] Remove `.claude/commands/capture.md`
-- [ ] Remove `.claude/commands/seed.md`
-- [ ] Verify skills appear in Claude's system-reminder by checking frontmatter format matches existing skills (e.g. `~/.agents/skills/grill-me/SKILL.md`)
-- [ ] Update `CLAUDE.md` if it references capture/seed as commands
+- [x] Create `.claude/skills/capture/` directory and move `capture.md` content into `SKILL.md` with correct skill frontmatter (`name`, `description`)
+- [x] Create `.claude/skills/seed/` directory and move `seed.md` content into `SKILL.md` with correct skill frontmatter
+- [x] Remove `.claude/commands/capture.md`
+- [x] Remove `.claude/commands/seed.md`
+- [x] Verify skills appear in Claude's system-reminder by checking frontmatter format matches existing skills (e.g. `~/.agents/skills/grill-me/SKILL.md`)
+- [x] Update `CLAUDE.md` if it references capture/seed as commands
+
+Rationale: Already implemented
 
 ---
-
-## Done
 
 ## Onboarding and Introduction for New Users
 **Type**: task

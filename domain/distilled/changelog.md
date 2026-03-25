@@ -2,6 +2,35 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-24 — Grill Session
+
+### Captured
+- [task/high]: grill-20260324-perf1 → Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
+  Source: /grill-me session — identified that task [5] (Split Refine Subagent) does not address the latency problem; root causes are raw file accumulation, upfront full-context pre-load, and premature split-check
+
+---
+
+## 2026-03-24 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260324-a3f1 → routed to backlog.md as high-priority task "Remove Speckit Dependency from Domain Brain"
+
+### Governed decisions
+- domain-20260319-d6a8: normative_conflict → archived without routing
+  Decided by: Søren Lindstrøm | Rationale: "Already completed task — no separate requirement needed"
+
+---
+
+## 2026-03-24 — Triage Session
+
+### Closed
+- [close]: domain-20260319-c4f1, domain-20260319-e7b2, domain-20260319-c5f7 → Migrate capture and seed from commands to project-local skills
+  Rationale: "Already implemented"
+- [close]: domain-20260324-a3f1 → Remove Speckit Dependency from Domain Brain
+  Rationale: "Item implemented"
+
+---
+
 ## 2026-03-19 — Refine Session
 
 ### Autonomous actions
