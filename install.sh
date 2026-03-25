@@ -5,6 +5,7 @@ set -euo pipefail
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/slind/domain-brain/main/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/slind/domain-brain/main/install.sh | bash -s -- my-project
+#   curl -fsSL https://raw.githubusercontent.com/slind/domain-brain/main/install.sh | bash -s -- --update
 
 GITHUB_RAW_BASE="https://raw.githubusercontent.com/slind/domain-brain/main"
 
@@ -37,6 +38,153 @@ fetch_file() {
   if ! curl -fsSL "${GITHUB_RAW_BASE}/${source_path}" -o "${dest_path}"; then
     echo "Error: Failed to fetch ${source_path}" >&2
     return 1
+  fi
+}
+
+# Function to update an existing Domain Brain installation
+update_domain_brain() {
+  # Verify we're in a project with Domain Brain installed
+  if [[ ! -f .domain-brain-root ]]; then
+    echo "Error: No Domain Brain installation found in current directory" >&2
+    echo "Hint: Run without --update to perform a fresh install" >&2
+    exit 1
+  fi
+
+  echo "Updating Domain Brain installation..."
+  echo ""
+
+  local -a added=()
+  local -a updated=()
+  local -a removed=()
+
+  # Track existing Domain Brain files before update
+  local -A existing_commands=()
+  local -A existing_agents=()
+  local -A existing_skills=()
+
+  # Scan for existing Domain Brain files
+  if [[ -d .claude/commands ]]; then
+    while IFS= read -r -d '' file; do
+      local basename=$(basename "$file")
+      if [[ "$basename" == domain:*.md ]]; then
+        existing_commands["$basename"]=1
+      fi
+    done < <(find .claude/commands -maxdepth 1 -type f -name "domain:*.md" -print0 2>/dev/null)
+  fi
+
+  if [[ -d .claude/agents ]]; then
+    while IFS= read -r -d '' file; do
+      local basename=$(basename "$file")
+      if [[ "$basename" == domain-*.md ]]; then
+        existing_agents["$basename"]=1
+      fi
+    done < <(find .claude/agents -maxdepth 1 -type f -name "domain-*.md" -print0 2>/dev/null)
+  fi
+
+  if [[ -d .claude/skills ]]; then
+    while IFS= read -r -d '' dir; do
+      local basename=$(basename "$dir")
+      if [[ "$basename" == domain-* ]]; then
+        existing_skills["$basename"]=1
+      fi
+    done < <(find .claude/skills -maxdepth 1 -type d -name "domain-*" -print0 2>/dev/null)
+  fi
+
+  # Create directories if they don't exist
+  mkdir -p .claude/commands
+  mkdir -p .claude/agents
+  mkdir -p .claude/skills
+
+  # Update command files
+  for cmd in "${COMMANDS[@]}"; do
+    local dest_path=".claude/commands/${cmd}"
+    if [[ -f "$dest_path" ]]; then
+      fetch_file ".claude/commands/${cmd}" "${dest_path}"
+      updated+=("commands/${cmd}")
+      unset existing_commands["$cmd"]
+    else
+      fetch_file ".claude/commands/${cmd}" "${dest_path}"
+      added+=("commands/${cmd}")
+    fi
+  done
+
+  # Update agent files
+  for agent in "${AGENTS[@]}"; do
+    local dest_path=".claude/agents/${agent}"
+    if [[ -f "$dest_path" ]]; then
+      fetch_file ".claude/agents/${agent}" "${dest_path}"
+      updated+=("agents/${agent}")
+      unset existing_agents["$agent"]
+    else
+      fetch_file ".claude/agents/${agent}" "${dest_path}"
+      added+=("agents/${agent}")
+    fi
+  done
+
+  # Update skill files
+  for skill in "${SKILLS[@]}"; do
+    local dest_dir=".claude/skills/${skill}"
+    local dest_file="${dest_dir}/SKILL.md"
+    if [[ -d "$dest_dir" ]]; then
+      mkdir -p "$dest_dir"
+      fetch_file ".claude/skills/${skill}/SKILL.md" "${dest_file}"
+      updated+=("skills/${skill}/SKILL.md")
+      unset existing_skills["$skill"]
+    else
+      mkdir -p "$dest_dir"
+      fetch_file ".claude/skills/${skill}/SKILL.md" "${dest_file}"
+      added+=("skills/${skill}/SKILL.md")
+    fi
+  done
+
+  # Remove obsolete Domain Brain files (files that existed but are no longer in the lists)
+  for cmd in "${!existing_commands[@]}"; do
+    rm -f ".claude/commands/${cmd}"
+    removed+=("commands/${cmd}")
+  done
+
+  for agent in "${!existing_agents[@]}"; do
+    rm -f ".claude/agents/${agent}"
+    removed+=("agents/${agent}")
+  done
+
+  for skill in "${!existing_skills[@]}"; do
+    rm -rf ".claude/skills/${skill}"
+    removed+=("skills/${skill}/")
+  done
+
+  # Report changes
+  echo ""
+  echo "Update complete!"
+  echo ""
+
+  if [[ ${#added[@]} -gt 0 ]]; then
+    echo "Added:"
+    for file in "${added[@]}"; do
+      echo "  + $file"
+    done
+    echo ""
+  fi
+
+  if [[ ${#updated[@]} -gt 0 ]]; then
+    echo "Updated:"
+    for file in "${updated[@]}"; do
+      echo "  ~ $file"
+    done
+    echo ""
+  fi
+
+  if [[ ${#removed[@]} -gt 0 ]]; then
+    echo "Removed:"
+    for file in "${removed[@]}"; do
+      echo "  - $file"
+    done
+    echo ""
+  fi
+
+  if [[ ${#added[@]} -eq 0 && ${#updated[@]} -eq 0 && ${#removed[@]} -eq 0 ]]; then
+    echo "No changes needed - installation is up to date."
+    echo ""
   fi
 }
 
@@ -155,6 +303,9 @@ EOF
 }
 
 # Parse arguments
-PROJECT_NAME="${1:-}"
-
-install_domain_brain "$PROJECT_NAME"
+if [[ "${1:-}" == "--update" ]]; then
+  update_domain_brain
+else
+  PROJECT_NAME="${1:-}"
+  install_domain_brain "$PROJECT_NAME"
+fi
