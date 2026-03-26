@@ -92,16 +92,6 @@ Commands, skills, and agents from this application should be prefixed with a nam
 
 ---
 
-## Domain Brain Installation and Initialization Mechanism
-**Type**: task
-**Status**: in-progress
-**Priority**: high
-**Captured**: 2026-03-18
-**Source**: query-20260318-gap1
-
-Define and implement a mechanism for installing Domain Brain into any project. Requirement domain-20260318-3f7c ("Domain Brain Must Be Installable in Any Project") has no corresponding implementation task. Without this, adoption is blocked at step zero — users must manually copy files and set up the directory structure. Work involves defining a scaffolding command (e.g., `/db:init`) or documented setup procedure that creates the `domain/`, `.claude/agents/`, `.claude/commands/` layout with starter config files in an arbitrary project.
-
----
 
 ## Split Refine Subagent by Specialist Type
 **Type**: task
@@ -161,7 +151,41 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 
 
 
+## Open Question Support & Long-Running Problem Resolution
+**Type**: task
+**Status**: in-progress
+**Priority**: high
+**Captured**: 2026-03-25
+**Source**: domain-20260325-c3d4
+**Requirement**: requirements-active-1.md → "Open Questions and Long-Running Problem Resolution (Intent)"
+
+Analyse what Domain Brain needs in order to handle open questions and long-running problem resolution. This closes a known gap: the current system captures discrete knowledge items and tasks but has no mechanism for tracking questions that remain unanswered over time or for accumulating progressive information toward resolving a complex problem.
+
+Analysis should cover:
+- A lifecycle model for open questions (posed → investigating → resolved / deferred)
+- How partial answers and new evidence are captured and linked to the originating question
+- Whether a new `type: question` entry in the type registry is warranted, or whether an extension to `type: task` is sufficient
+- How the refine pipeline should handle new raw items that are answers or updates to an existing open question (deduplication, merging, linkage)
+- Distilled file placement: a dedicated `distilled/questions.md`, or sections within `backlog.md`, or per-domain question files
+- Query/retrieval UX: how a user or subagent surfaces all open questions and their current resolution state
+- Long-running resolution: how context accumulated across multiple sessions is preserved without unbounded growth of a single entry
+
+---
+
 ## Done
+
+## Domain Brain Installation and Initialization Mechanism
+**Type**: task
+**Status**: done
+**Priority**: high
+**Captured**: 2026-03-18
+**Source**: query-20260318-gap1
+
+Define and implement a mechanism for installing Domain Brain into any project. Requirement domain-20260318-3f7c ("Domain Brain Must Be Installable in Any Project") has no corresponding implementation task. Without this, adoption is blocked at step zero — users must manually copy files and set up the directory structure. Work involves defining a scaffolding command (e.g., `/db:init`) or documented setup procedure that creates the `domain/`, `.claude/agents/`, `.claude/commands/` layout with starter config files in an arbitrary project.
+
+Rationale: task implemented
+
+---
 
 ## Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
 **Type**: task

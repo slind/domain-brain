@@ -5,6 +5,25 @@
 ## 2026-03-25 — Triage Session
 
 ### Closed
+- [close]: query-20260318-gap1 → Domain Brain Installation and Initialization Mechanism
+  Rationale: "task implemented"
+
+---
+
+## 2026-03-25 — Refine Session
+
+### Autonomous actions
+- [route_and_summarise]: domain-20260325-c3d4 → distilled/backlog.md — new high-priority task "Open Question Support & Long-Running Problem Resolution"
+
+### Governed decisions
+- domain-brain-20260325-a1b2: normative requirement with open design → Option C: record intent without specifying implementation
+  Decided by: Søren Lindstrøm | Rationale: "This is the intent, not the solution. There is a task created about analyzing this requirement and proposing a solution."
+
+---
+
+## 2026-03-25 — Triage Session
+
+### Closed
 - [close]: grill-20260324-perf1 → Fix /refine Latency: Lazy Context Loading, Post-Session Split-Check, Delete Refined Files
   Rationale: "Implemented in github issue 4"
 

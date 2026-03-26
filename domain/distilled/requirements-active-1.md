@@ -736,3 +736,24 @@ After the team closes several backlog items and adds a new interface contract, t
 - The command does not validate the content of `config/identity.md` beyond confirming the file exists.
 
 ---
+
+## Open Questions and Long-Running Problem Resolution (Intent)
+**Type**: requirement
+**Captured**: 2026-03-25
+**Source**: domain-brain-20260325-a1b2
+
+Domain Brain must support "open questions" — topics that cannot be immediately answered but accumulate evidence over time until they are resolved.
+
+A domain may have many open questions at any point (e.g. "What technology should we use?", "How do we handle security?"). Over time, information relevant to a question is captured — including from sources the user does not consciously connect to the question (e.g. a meeting minute that mentions something pertinent). Domain Brain must serve as the memory that compiles whatever is currently known about a question at any point in time.
+
+Required query capabilities:
+- What open questions do we currently have?
+- What do we currently know about question X?
+- What decisions have already been made regarding question X?
+- What should the next steps be to resolve question X?
+
+Questions may be hierarchically related: a question like "How do we handle client authentication?" may be a sub-question of "How do we handle security on future APIs?". The system must be able to represent and navigate these relationships.
+
+**Implementation approach is unspecified.** See backlog task "Open Question Support & Long-Running Problem Resolution" for analysis work.
+
+---
