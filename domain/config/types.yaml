@@ -53,3 +53,8 @@ types:
     description: "Unclassified item. The refine agent will attempt to classify it during refinement."
     routes_to: null
     example: "The checkout flow behaves differently on mobile browsers."
+
+  - name: investigation
+    description: "A long-running domain question requiring evidence collection and incremental resolution."
+    routes_to: investigations/
+    example: "What should our API security model look like?"

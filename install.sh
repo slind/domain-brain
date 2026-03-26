@@ -93,6 +93,7 @@ update_domain_brain() {
   mkdir -p .claude/commands
   mkdir -p .claude/agents
   mkdir -p .claude/skills
+  mkdir -p domain/investigations
 
   # Update command files
   for cmd in "${COMMANDS[@]}"; do
@@ -135,6 +136,21 @@ update_domain_brain() {
       added+=("skills/${skill}/SKILL.md")
     fi
   done
+
+  # Add investigation type to types.yaml if not present
+  if [[ -f domain/config/types.yaml ]]; then
+    if ! grep -q "name: investigation" domain/config/types.yaml; then
+      echo "Adding investigation type to types.yaml..."
+      cat >> domain/config/types.yaml <<'EOF'
+
+  - name: investigation
+    description: "A long-running domain question requiring evidence collection and incremental resolution."
+    routes_to: investigations/
+    example: "What should our API security model look like?"
+EOF
+      updated+=("domain/config/types.yaml (added investigation type)")
+    fi
+  fi
 
   # Remove obsolete Domain Brain files (files that existed but are no longer in the lists)
   for cmd in "${!existing_commands[@]}"; do
@@ -207,6 +223,9 @@ install_domain_brain() {
   mkdir -p .claude/commands
   mkdir -p .claude/agents
   mkdir -p .claude/skills
+
+  # Create domain/investigations directory
+  mkdir -p domain/investigations
 
   # Install command files
   echo "Installing Domain Brain commands..."

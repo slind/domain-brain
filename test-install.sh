@@ -208,6 +208,7 @@ update_domain_brain() {
   mkdir -p .claude/commands
   mkdir -p .claude/agents
   mkdir -p .claude/skills
+  mkdir -p domain/investigations
 
   # Update command files
   for cmd in "${COMMANDS[@]}"; do
@@ -250,6 +251,21 @@ update_domain_brain() {
       added+=("skills/${skill}/SKILL.md")
     fi
   done
+
+  # Add investigation type to types.yaml if not present
+  if [[ -f domain/config/types.yaml ]]; then
+    if ! grep -q "name: investigation" domain/config/types.yaml; then
+      echo "Adding investigation type to types.yaml..."
+      cat >> domain/config/types.yaml <<'EOF'
+
+  - name: investigation
+    description: "A long-running domain question requiring evidence collection and incremental resolution."
+    routes_to: investigations/
+    example: "What should our API security model look like?"
+EOF
+      updated+=("domain/config/types.yaml (added investigation type)")
+    fi
+  fi
 
   # Remove obsolete Domain Brain files (files that existed but are no longer in the lists)
   for cmd in "${!existing_commands[@]}"; do
@@ -323,6 +339,9 @@ install_domain_brain() {
   mkdir -p .claude/agents
   mkdir -p .claude/skills
 
+  # Create domain/investigations directory
+  mkdir -p domain/investigations
+
   # Install command files
   echo "Installing Domain Brain commands..."
   for cmd in "${COMMANDS[@]}"; do
@@ -356,6 +375,11 @@ types:
     description: "An actionable work item linked to a domain requirement or gap."
     routes_to: distilled/backlog.md
     example: "Add retry logic to the payment callback handler (linked to REQ-007)."
+
+  - name: investigation
+    description: "A long-running domain question requiring evidence collection and incremental resolution."
+    routes_to: investigations/
+    example: "What should our API security model look like?"
 EOF
   fi
 
@@ -422,6 +446,10 @@ test_fresh_install_new_project() {
 
   # Verify types.yaml created
   assert_file_exists "my-project/domain/config/types.yaml" "types.yaml created"
+  assert_file_contains "my-project/domain/config/types.yaml" "name: investigation" "types.yaml contains investigation type"
+
+  # Verify domain/investigations/ IS created
+  assert_dir_exists "my-project/domain/investigations" "domain/investigations created by installer"
 
   # Verify domain/raw/ NOT created
   assert_file_not_exists "my-project/domain/raw" "domain/raw not created by installer"
@@ -499,6 +527,12 @@ test_update_mode() {
   # Verify domain/ directory untouched
   assert_file_exists "domain/raw/user-item.md" "domain/raw content preserved"
   assert_file_contains "domain/raw/user-item.md" "# User content" "domain content unchanged"
+
+  # Verify domain/investigations/ was created during update
+  assert_dir_exists "domain/investigations" "domain/investigations created during update"
+
+  # Verify investigation type was added to types.yaml
+  assert_file_contains "domain/config/types.yaml" "name: investigation" "investigation type added to types.yaml during update"
 }
 
 # Test 4: types.yaml preservation
