@@ -13,6 +13,9 @@ GITHUB_RAW_BASE="https://raw.githubusercontent.com/slind/domain-brain/main"
 COMMANDS=(
   "domain:consistency-check.md"
   "domain:frame.md"
+  "domain:investigation:analyze-issue.md"
+  "domain:investigation:query.md"
+  "domain:investigation:resolve.md"
   "domain:query.md"
   "domain:refine.md"
   "domain:triage.md"
@@ -26,6 +29,7 @@ AGENTS=(
 # Skill directories to install (from .claude/skills/)
 SKILLS=(
   "domain-capture"
+  "domain-investigation-capture"
   "domain-seed"
 )
 
@@ -311,6 +315,11 @@ types:
     description: "Unclassified item. The refine agent will attempt to classify it during refinement."
     routes_to: null
     example: "The checkout flow behaves differently on mobile browsers."
+
+  - name: investigation
+    description: "A long-running domain question requiring evidence collection and incremental resolution."
+    routes_to: investigations/
+    example: "What should our API security model look like?"
 EOF
   fi
 
