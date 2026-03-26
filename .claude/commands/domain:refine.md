@@ -274,6 +274,8 @@ specialist plans in Step 7.
 
 Initialize an empty `touched_files` set to track which distilled files are modified during this session.
 
+Initialize an empty `distilled_items_with_bodies` list to collect raw item content before deletion (needed for investigation linking in Step 10.75).
+
 Create the `<domain-root>/distilled/` directory if it does not exist (use Bash: `mkdir -p "<domain-root>/distilled"`).
 
 For each entry in AUTONOMOUS_ACTIONS:
@@ -282,8 +284,9 @@ For each entry in AUTONOMOUS_ACTIONS:
 2. Apply the content change (append new entry, merge into existing, etc.).
 3. Write the updated distilled file using the Edit or Write tool.
 4. Add the distilled file path to `touched_files`.
-5. Record the action in the session log (in-memory list for the changelog).
-6. Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
+5. **Collect raw item body before deletion**: Read the raw file at `<domain-root>/raw/<item_id>.md`, extract the body content (everything after the frontmatter), and store in `distilled_items_with_bodies` list as `{item_id: <id>, target_file: <target_file>, description: <description from action>, body_content: <raw body text>}`.
+6. Record the action in the session log (in-memory list for the changelog).
+7. Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
 Do all of this silently — no output to the user per FR-008.
 
@@ -334,6 +337,7 @@ Determine the chosen option:
 
 Write the chosen content to the target distilled file.
 Add the distilled file path to `touched_files`.
+**Collect raw item body before deletion**: Read the raw file at `<domain-root>/raw/<item_id>.md`, extract the body content (everything after the frontmatter), and append to `distilled_items_with_bodies` list as `{item_id: <id>, target_file: <target_file>, description: <chosen option's description>, body_content: <raw body text>}`.
 Record the decision in the session log: item_id, topic, outcome, rationale (user's words).
 Delete the raw file using the Bash tool: `rm <domain-root>/raw/<item_id>.md`
 
@@ -481,6 +485,178 @@ Make no file writes. Do not log the skipped proposal to the changelog (skipped p
 
 ---
 
+## Step 10.75 — Investigation linking
+
+After all file modifications (autonomous actions, governed decisions, and file splits) are complete, check whether newly distilled items should be linked to open investigation nodes.
+
+### Execution conditions
+
+Skip this step silently if either condition is not met:
+1. `<domain-root>/investigations/` directory does NOT exist, OR
+2. `touched_files` is empty (no items distilled in this session)
+
+Otherwise proceed.
+
+### Load open investigation nodes
+
+Use Glob to find all `.md` files matching: `<domain-root>/investigations/*.md`.
+
+For each file:
+1. Read YAML frontmatter
+2. Extract `status` field
+3. Keep only if `status: open` OR `status: blocked`
+
+Store as `open_nodes` list with:
+- `node_id` (from frontmatter `id` field)
+- `file_path` (absolute path to node file)
+- `question` (the h1 heading text)
+
+If `open_nodes` is empty after filtering, skip to Step 11.
+
+### Identify newly distilled items
+
+Use the `distilled_items_with_bodies` list populated in Steps 9 and 10. This list contains entries with: `{item_id, target_file, description, body_content}`.
+
+If empty, skip to Step 11.
+
+### Initialize linking data structures
+
+Create two lists:
+- `autonomous_links` — links to be written silently
+- `governed_link_decisions` — uncertain links requiring user confirmation
+
+Also create `investigation_linking_log` (empty initially, will be populated for changelog).
+
+### Evaluate links
+
+For each item in `distilled_items_with_bodies`:
+
+#### 1. Explicit reference check
+
+Scan `item.body_content` for node ID patterns matching: capital letters followed by hyphen and 3+ digits (e.g., SEC-001, API-042, INV-123).
+
+Pattern regex: `[A-Z]+\-[0-9]{3,}`
+
+If a match is found:
+- Verify the matched node_id exists in `open_nodes` (case-sensitive exact match on the `id` field)
+- If verified, add to `autonomous_links`:
+  ```
+  {
+    item_id: <id>,
+    target_file: <target_file>,
+    node_id: <matched>,
+    node_file_path: <path>,
+    basis: "explicit_reference"
+  }
+  ```
+- **Skip semantic evaluation for this node** (explicit reference takes precedence for this specific node)
+
+#### 2. Semantic evaluation
+
+For all open nodes that were NOT explicitly referenced in the item body:
+
+Using LLM judgment, evaluate: Does `item.body_content` and `item.description` semantically relate to `node.question`?
+
+Consider:
+- Does the item provide evidence, constraints, or context that would help resolve the investigation question?
+- Would a domain steward working on this node want to know about this distilled knowledge?
+
+Classify the match as:
+- **high_confidence**: The item directly addresses the investigation question or provides strong supporting evidence
+- **uncertain**: The item may be relevant but the connection is indirect or ambiguous
+- **no_match**: The item is clearly unrelated to the investigation question
+
+**If high_confidence**:
+Add to `autonomous_links`:
+```
+{
+  item_id: <id>,
+  target_file: <target_file>,
+  node_id: <node_id>,
+  node_file_path: <path>,
+  basis: "high_confidence_semantic"
+}
+```
+
+**If uncertain**:
+Add to `governed_link_decisions`:
+```
+{
+  item_id: <id>,
+  target_file: <target_file>,
+  node_id: <node_id>,
+  node_file_path: <path>,
+  node_question: <question>,
+  item_summary: <description>,
+  basis: "<brief explanation of potential relevance>"
+}
+```
+
+**If no_match**: Skip (do not record).
+
+### Execute autonomous links (SILENT)
+
+For each entry in `autonomous_links`:
+
+1. Read the investigation node file at `node_file_path`
+2. Locate the `### Distilled Knowledge` subsection within the `## Evidence` section
+3. Generate the evidence link text:
+   ```
+   [distilled] <item.description> (<relative-path-to-target-file>)
+   ```
+   Where relative-path is from domain root (e.g., `distilled/requirements.md`, not absolute path)
+4. Append as a new bullet point after any existing `[distilled]` entries in that subsection
+5. Write the updated node file using the Edit tool
+6. Record in `investigation_linking_log.autonomous_links`:
+   ```
+   {item_id: <id>, node_id: <node_id>, basis: <"explicit_reference" | "high_confidence_semantic">}
+   ```
+
+**No output to user** — this is silent like Step 9 autonomous actions.
+
+### Present governed link decisions (ONE AT A TIME)
+
+For each entry in `governed_link_decisions`, present to user one at a time:
+
+**Presentation format**:
+```
+Investigation link decision (<current> of <total>):
+
+Should this knowledge be linked to investigation <node_id>?
+
+Investigation question: <node_question>
+
+New distilled knowledge:
+  <item_summary>
+  → <target_file>
+
+Options:
+  A. Link to investigation (append [distilled] evidence)
+  B. Skip — not relevant to this investigation
+
+You can reply with an option letter or describe your decision.
+(Say "stop" or "skip for today" to pause the session.)
+```
+
+**Handle user response**:
+
+- If user says "stop", "pause", "skip for today", or similar:
+  - Mark remaining link decisions as unprocessed
+  - Proceed to Step 11 (pause)
+
+- If user confirms link (option A or equivalent natural language):
+  - Execute the link (same steps as autonomous link above)
+  - Record in `investigation_linking_log.governed_links`:
+    `{item_id: <id>, node_id: <node_id>, decision: "linked", rationale: <user's stated reason>}`
+  - Advance to next decision
+
+- If user rejects link (option B or equivalent natural language):
+  - Do NOT write any file
+  - Do NOT record in changelog (skipped links are silent)
+  - Advance to next decision
+
+---
+
 ## Step 11 — Session end (complete or paused)
 
 Whether the session completes normally or the user requests a pause:
@@ -523,6 +699,13 @@ Read `<domain-root>/distilled/changelog.md`. Append the following session entry 
   Decided by: <captured_by from raw item or "user"> | Rationale: "<user's stated rationale>"
 ...
 
+### Investigation Links
+- [explicit_reference]: <item_id> → <node_id>
+- [high_confidence_semantic]: <item_id> → <node_id>
+- [governed_link_accepted]: <item_id> → <node_id>
+  Decided by: <user> | Rationale: "<user's stated reason>"
+...
+
 ---
 ```
 
@@ -534,6 +717,8 @@ do not write an empty section.
 If there were no autonomous actions or no governed decisions, omit that subsection header.
 
 If no splits were executed, omit the `### File Splits` subsection entirely.
+
+If no investigation links were created (both autonomous and governed lists empty), omit the `### Investigation Links` subsection entirely.
 
 Use the Edit tool to append to changelog.md.
 
@@ -557,9 +742,14 @@ Autonomous: <N> items processed
   ✓ Routed <n> items to distilled files
   ✓ Classified <n> 'other' items
   ✓ Split <n> multi-type items
+  ✓ Linked <n> items to investigation nodes (autonomous)
 
 Governed: <N> decisions
   ✓ <item_id>: <outcome summary>
+  ...
+
+Investigation links: <N> governed decisions
+  ✓ <item_id> → <node_id>: <accepted | skipped>
   ...
 
 Changelog updated: distilled/changelog.md
