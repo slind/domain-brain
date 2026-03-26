@@ -151,9 +151,50 @@ Currently the only way to share domain knowledge externally is to share raw Mark
 
 
 
+
+## MCP Connection Source Support for /seed
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-26
+**Source**: query-20260326-gap1
+**Requirement**: requirements-active-1.md → "Feature 002 Extension: Online Sources, Source Preservation, and Partial-Relevance Filtering" (FR-002-EXT-1)
+
+Extend `/seed` to accept a named MCP connection as a source argument. Users should be able to configure MCP connections (transport, endpoint, optional auth) in Domain Brain config and then run `/seed <mcp-connection>/<resource-path>`. Each MCP resource is fetched, segmented, and processed through the existing relevance filter. The `source.location` frontmatter on produced raw items carries the MCP resource URI.
+
+Note: The existing backlog task "Enterprise API Integration for /seed" covers REST API access to Confluence/Notion/Jira/SharePoint — related but separate. MCP is a protocol-level integration that could eventually wrap those same sources. Consider whether to merge these tasks or keep them parallel when starting work.
+
+---
+
+## Per-Chunk Source Reference Anchoring for Online Sources
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-26
+**Source**: query-20260326-gap2
+**Requirement**: requirements-active-1.md → "Feature 002 Extension: Online Sources, Source Preservation, and Partial-Relevance Filtering" (FR-002-EXT-2)
+
+The existing FR-012 sets `source.location` on raw items to the origin URL — but only at the item level. When a large online source (web page or MCP resource) is split into chunks, each chunk needs a reference resolvable to the specific section of the original, not just the root URL. Work involves: enriching the chunk frontmatter with heading anchors (for web pages) or sub-resource identifiers (for MCP resources), and ensuring the chunk-level reference survives the full pipeline into distilled entries.
+
+---
+
+## Partial-Relevance Filtering for Large Online Sources
+**Type**: task
+**Status**: open
+**Priority**: high
+**Captured**: 2026-03-26
+**Source**: query-20260326-gap3
+**Requirement**: requirements-active-1.md → "Feature 002 Extension: Online Sources, Source Preservation, and Partial-Relevance Filtering" (FR-002-EXT-3)
+
+Online sources can be very large with only fragments relevant to the domain. The current relevance filter (FR-011) operates at item creation — but it was designed for reasonably-sized sources. For large online sources, the pipeline must evaluate each chunk *before* writing to the raw queue and discard out-of-scope chunks rather than creating raw items that will be archived in `/refine`. Work involves: extending the seed pipeline to apply per-chunk filtering during ingestion, reporting the count of retained vs. discarded chunks at session end, and verifying the existing SC-003 (75% correct classification rate) still holds under this stricter per-chunk model.
+
+---
+
+## Done
+
 ## Open Question Support & Long-Running Problem Resolution
 **Type**: task
-**Status**: in-progress
+**Status**: done
 **Priority**: high
 **Captured**: 2026-03-25
 **Source**: domain-20260325-c3d4
@@ -170,9 +211,9 @@ Analysis should cover:
 - Query/retrieval UX: how a user or subagent surfaces all open questions and their current resolution state
 - Long-running resolution: how context accumulated across multiple sessions is preserved without unbounded growth of a single entry
 
----
+Rationale: implementation complete as part of prd 14
 
-## Done
+---
 
 ## Domain Brain Installation and Initialization Mechanism
 **Type**: task

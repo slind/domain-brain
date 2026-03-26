@@ -2,11 +2,21 @@
 
 <!-- Audit trail of all refine sessions and minutes of meeting. Appended by /refine at the end of every session. -->
 
+## 2026-03-26 — Refine Session
+
+### Governed decisions
+- domain-20260326-a4f2: new_requirement → Extended Feature 002 with FR-002-EXT-1 (MCP sources), FR-002-EXT-2 (source-reference preservation), FR-002-EXT-3 (partial-relevance filtering)
+  Decided by: Søren Lindstrøm | Rationale: "A — extend Feature 002"
+
+---
+
 ## 2026-03-25 — Triage Session
 
 ### Closed
 - [close]: query-20260318-gap1 → Domain Brain Installation and Initialization Mechanism
   Rationale: "task implemented"
+- [close]: domain-20260325-c3d4 → Open Question Support & Long-Running Problem Resolution
+  Rationale: "implementation complete as part of prd 14"
 
 ---
 

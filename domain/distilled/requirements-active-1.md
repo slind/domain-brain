@@ -757,3 +757,21 @@ Questions may be hierarchically related: a question like "How do we handle clien
 **Implementation approach is unspecified.** See backlog task "Open Question Support & Long-Running Problem Resolution" for analysis work.
 
 ---
+
+## Feature 002 Extension: Online Sources, Source Preservation, and Partial-Relevance Filtering
+**Type**: requirement
+**Captured**: 2026-03-26
+**Source**: [domain-20260326-a4f2]
+
+Extends Feature 002 (Seed Pipeline) with three additions:
+
+### FR-002-EXT-1: MCP Connection Sources
+The /seed command MUST support MCP connections as a source type in addition to Markdown files, PDFs, and web URLs. MCP sources expose structured content (e.g. Confluence spaces, Notion databases) through a standard protocol. The technical constraint 'No MCP connection support (future feature)' in Feature 002 is hereby lifted and replaced by this requirement.
+
+### FR-002-EXT-2: Source Reference Preservation on Chunking
+When any online source (web URL or MCP resource) is split into chunks, each chunk MUST carry a source reference in its frontmatter that is resolvable back to the original online resource. For web URLs this is the canonical URL plus a byte-offset or heading anchor. For MCP resources this is the MCP resource URI plus any applicable sub-resource identifier. This extends the existing source-location frontmatter requirement to cover online sources explicitly.
+
+### FR-002-EXT-3: Partial-Relevance Filtering for Large Online Sources
+Online sources may contain large volumes of content with only partial relevance to the target domain. The seed pipeline MUST apply a relevance filter before storing chunks. Chunks assessed as out-of-scope for the configured domain MUST be discarded rather than stored. The filtering decision and the count of discarded chunks MUST be reported to the user at the end of a seed operation. The filter MUST operate per-chunk so that a single large document can yield both retained and discarded chunks.
+
+---
